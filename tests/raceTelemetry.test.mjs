@@ -5,6 +5,8 @@ import {
   MemoryTelemetryStore,
   RaceTelemetryRecorder,
   createTelemetryStore,
+  normalizeSessionType,
+  selectSessionsToPrune,
   serializeRaceSession,
 } from '../js/raceTelemetry.js';
 
@@ -143,4 +145,120 @@ test('validates required identity and dt', () => {
   assert.throws(() => new RaceTelemetryRecorder({ sessionId: '', userId: 'user' }), /sessionId/);
   const capture = recorder();
   assert.throws(() => capture.step(session(), -0.1), /dt/);
+});
+
+test('reports the venue name even when it is only a non-enumerable circuit property', () => {
+  const state = session();
+  state.circuit = Object.defineProperties(
+    { id: 'monza', length: 5801 },
+    { publicName: { value: 'Autodromo Nazionale', enumerable: false } },
+  );
+  assert.equal(serializeRaceSession(state).circuit.name, 'Autodromo Nazionale');
+});
+
+test('distinguishes a time trial from qualifying and stamps every record', async () => {
+  assert.equal(normalizeSessionType(null, 'quali', true), 'time_trial');
+  assert.equal(normalizeSessionType(null, 'quali', false), 'qualifying');
+  assert.equal(normalizeSessionType(null, 'race', false), 'race');
+  assert.equal(normalizeSessionType('time_trial', 'race', false), 'time_trial');
+  assert.equal(normalizeSessionType('nonsense', 'race', false), 'race');
+
+  const capture = new RaceTelemetryRecorder({
+    sessionId: 'session-1', userId: 'user-1', userDisplayName: 'Tester',
+    store: new MemoryTelemetryStore(), metadata: { mode: 'quali', trial: true },
+  });
+  assert.equal(capture.envelope.sessionType, 'time_trial');
+  const state = session();
+  capture.begin(state);
+  capture.step(state, 0.05);
+  await capture.flush();
+  assert.ok((await capture.records()).every(record => record.sessionType === 'time_trial'));
+});
+
+test('ends the session once with a reason and the laps actually completed', async () => {
+  const state = session();
+  const capture = recorder();
+  capture.begin(state);
+  state.entries[0].lapTimes.push(90, 88, 91);
+  state.entries[0].bestLap = 88;
+  state.entries[1].lapTimes.push(92);
+  capture.step(state, 0.05);
+
+  const [ended] = capture.end(state, { reason: 'abandoned' });
+  assert.equal(ended.event, 'session_ended');
+  assert.equal(ended.reason, 'abandoned');
+  assert.equal(ended.completedLaps, 3);
+  assert.equal(ended.playerCompletedLaps, 3);
+  assert.equal(ended.playerBestLapSeconds, 88);
+  assert.equal(ended.classified, false);
+  assert.deepEqual(capture.end(state), []);
+
+  await capture.flush();
+  const records = await capture.records();
+  assert.equal(records.filter(record => record.event === 'session_ended').length, 1);
+  assert.equal(records.at(-1).sequence, records.length - 1);
+});
+
+test('classifies the session end when the race produced results', () => {
+  const state = session();
+  state.results = [{ pos: 1, driver: state.entries[0].driver, team: state.entries[0].team, status: 'FINISHED', laps: 3 }];
+  const capture = recorder();
+  capture.begin(state);
+  const [ended] = capture.end(state);
+  assert.equal(ended.reason, 'classified');
+  assert.equal(ended.classified, true);
+});
+
+test('keeps no in-memory duplicate while IndexedDB is healthy', async () => {
+  const persisted = new MemoryTelemetryStore();
+  const shadow = new MemoryTelemetryStore();
+  const store = new FallbackTelemetryStore(persisted, shadow);
+  const capture = recorder(store);
+  const state = session();
+  capture.begin(state);
+  capture.step(state, 0.05);
+  await capture.flush();
+
+  assert.equal(shadow.records.length, 0);
+  assert.equal(persisted.records.length, 2);
+  assert.equal((await capture.records()).length, 2);
+});
+
+test('merges records persisted before an IndexedDB failure with the memory fallback', async () => {
+  const persisted = new MemoryTelemetryStore();
+  let blocked = false;
+  const primary = {
+    async appendBatch(records) {
+      if (blocked) throw new Error('quota exceeded');
+      await persisted.appendBatch(records);
+    },
+    async readSession(sessionId) { return persisted.readSession(sessionId); },
+    async clearSession(sessionId) { return persisted.clearSession(sessionId); },
+  };
+  const store = new FallbackTelemetryStore(primary);
+  const capture = recorder(store);
+  const state = session();
+  capture.begin(state);
+  capture.step(state, 0.05);
+  await capture.flush();
+  blocked = true;
+  capture.step(state, 0.05);
+  await capture.flush();
+
+  const records = await capture.records();
+  assert.equal(store.primaryFailed, true);
+  assert.deepEqual(records.map(record => record.sequence), [0, 1, 2]);
+});
+
+test('retains only the newest sessions and never the one being recorded', () => {
+  const sessions = [
+    { sessionId: 'oldest', createdAt: '2026-10-19T10:00:00.000Z' },
+    { sessionId: 'older', createdAt: '2026-10-19T11:00:00.000Z' },
+    { sessionId: 'recent', createdAt: '2026-10-19T12:00:00.000Z' },
+    { sessionId: 'newest', createdAt: '2026-10-19T13:00:00.000Z' },
+  ];
+  assert.deepEqual(selectSessionsToPrune(sessions, 2, 'newest'), ['older', 'oldest']);
+  assert.deepEqual(selectSessionsToPrune(sessions, 3, 'oldest'), ['older']);
+  assert.deepEqual(selectSessionsToPrune(sessions, 1, 'oldest'), ['newest', 'recent', 'older']);
+  assert.deepEqual(selectSessionsToPrune([], 3, 'only'), []);
 });

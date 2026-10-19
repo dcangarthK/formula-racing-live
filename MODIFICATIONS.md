@@ -20,3 +20,16 @@ The upstream Git history and the `upstream` remote are retained.
 
 Future team customisation will be an additive organisation/team configuration
 layer. It will not silently replace the upstream fictional championship.
+
+## 2026-10-19 — telemetry contract corrections
+
+- Declared `sessionType` (`race`, `qualifying`, `time_trial`) on the session
+  envelope, on every record and on the ingest API, so a time trial is no longer
+  indistinguishable from qualifying.
+- Reported the venue name, which the circuit exposes as a non-enumerable
+  property, instead of an empty `circuit.name`.
+- Added a `session_ended` event carrying the termination reason and the laps
+  actually completed; `metadata.configuredLaps` is now `null` for a time trial.
+- Documented record units and the simulation clocks in `TELEMETRY_CONTRACT.md`.
+- Bounded local storage: IndexedDB is written without an in-memory duplicate,
+  and registering a session prunes all but the three newest sessions.

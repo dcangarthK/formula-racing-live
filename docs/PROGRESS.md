@@ -18,6 +18,9 @@
   token renewal, idempotent record IDs, and safe local fallback.
 - [x] Added a tested Cloud Run ingest service, Pub/Sub publisher, Docker image,
   and Terraform template (11 tests) without deploying or embedding GCP credentials.
+- [x] Corrected the telemetry contract: `sessionType` for time trials, real
+  venue name, `session_ended` with the laps actually completed, documented
+  units, and bounded IndexedDB retention (no in-memory duplicate, 3 sessions).
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
 - [ ] Add optional organisation/team customisation as a later, additive feature.

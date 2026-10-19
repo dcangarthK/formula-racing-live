@@ -1,4 +1,5 @@
 export const SCHEMA_VERSION = 'formula-racing-live.telemetry.v1';
+export const SESSION_TYPES = ['race', 'qualifying', 'time_trial'];
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const EVENT_PATTERN = /^[a-z][a-z0-9_]{0,63}$/;
@@ -28,12 +29,16 @@ export function validateSessionEnvelope(value) {
     invalid('createdAt must be an ISO date-time string', 'createdAt');
   }
   if (value.metadata !== undefined && !isObject(value.metadata)) invalid('metadata must be an object', 'metadata');
+  if (value.sessionType !== undefined && !SESSION_TYPES.includes(value.sessionType)) {
+    invalid(`sessionType must be one of ${SESSION_TYPES.join(', ')}`, 'sessionType');
+  }
   return {
     schemaVersion: SCHEMA_VERSION,
     sessionId: value.sessionId,
     user: { id: value.user.id, displayName: value.user.displayName.trim() },
     game: typeof value.game === 'string' ? value.game.slice(0, 80) : 'Formula Racing Live',
     createdAt: new Date(value.createdAt).toISOString(),
+    sessionType: value.sessionType || 'race',
     metadata: value.metadata || {},
   };
 }

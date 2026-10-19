@@ -12,7 +12,7 @@ import { advanceSteeringInput, digitalSteeringLimit } from './controls.js';
 import { cockpitFov, cockpitSeat } from './cockpit.js';
 import { createTelemetrySnapshot } from './telemetry.js';
 import { driverIdentity } from './driverIdentity.js';
-import { RaceTelemetryRecorder } from './raceTelemetry.js';
+import { RaceTelemetryRecorder, normalizeSessionType } from './raceTelemetry.js';
 import { createTelemetryUplink } from './telemetryUplink.js';
 
 // Photographic HDRI skies (CC0, PolyHaven). Load only the selected session's
@@ -914,13 +914,18 @@ class Game {
         userId: this.telemetryIdentity.userId,
         userDisplayName: this.telemetryIdentity.displayName,
         createdAt: this.telemetryIdentity.startedAt,
+        sessionType: normalizeSessionType(null, cfg.mode, cfg.trial),
         metadata: {
           gameVersion: '0.1.0',
           trackId: cfg.race.trackId,
+          circuitName: this.circuit?.publicName || track?.name || '',
           selectedDriverId: cfg.driverId,
           mode: cfg.mode,
+          trial: !!cfg.trial,
           seed: sessionSeed,
-          laps,
+          // A time trial runs until the driver stops, so it has no configured
+          // lap count; `session_ended` reports the laps actually completed.
+          configuredLaps: cfg.trial ? null : laps,
         },
       });
       this.telemetryUplink = createTelemetryUplink({ baseUrl: this.telemetryEndpoint });
@@ -1017,6 +1022,12 @@ class Game {
     clearTimeout(this._resultsTimer); this._resultsTimer = null;
     if (this.telemetryRecorder) {
       this.lastTelemetryRecorder = this.telemetryRecorder;
+      // Close the stream explicitly so a consumer can tell a classified race
+      // from a session the driver left, instead of inferring it from silence.
+      const endRecords = this.telemetryRecorder.end(this.session, {
+        reason: this.session?.results ? 'classified' : 'abandoned',
+      });
+      this.telemetryUplink?.enqueue(endRecords);
       void this.telemetryRecorder.flush().catch(() => {});
       this.telemetryRecorder = null;
     }

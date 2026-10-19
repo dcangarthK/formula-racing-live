@@ -105,7 +105,9 @@ export function serializeRaceSession(session = {}) {
     configuredLaps: finite(session.laps),
     circuit: {
       id: text(session.circuit?.id || session.circuit?.key),
-      name: text(session.circuit?.name),
+      // `publicName` is the venue label shown in game; it is defined as a
+      // non-enumerable circuit property, so it has to be read explicitly.
+      name: text(session.circuit?.publicName || session.circuit?.name || session.circuit?.def?.name),
       lengthM: finite(session.circuit?.length),
     },
     conditions: {
@@ -120,6 +122,17 @@ export function serializeRaceSession(session = {}) {
   };
 }
 
+export const SESSION_TYPES = ['race', 'qualifying', 'time_trial'];
+
+// A time trial runs the simulation in `quali` mode, so the raw session mode
+// cannot distinguish the two. Callers pass the product-level session type.
+export function normalizeSessionType(value, mode = 'race', trial = false) {
+  const requested = text(value).trim();
+  if (SESSION_TYPES.includes(requested)) return requested;
+  if (trial) return 'time_trial';
+  return text(mode) === 'quali' ? 'qualifying' : 'race';
+}
+
 export function createSessionEnvelope(options = {}) {
   if (!text(options.sessionId).trim()) throw new TypeError('sessionId is required');
   if (!text(options.userId).trim()) throw new TypeError('userId is required');
@@ -132,6 +145,11 @@ export function createSessionEnvelope(options = {}) {
     },
     game: text(options.game, 'Formula Racing Live'),
     createdAt: text(options.createdAt, new Date().toISOString()),
+    sessionType: normalizeSessionType(
+      options.sessionType,
+      options.metadata?.mode,
+      options.metadata?.trial,
+    ),
     metadata: options.metadata && typeof options.metadata === 'object'
       ? JSON.parse(JSON.stringify(options.metadata))
       : {},
@@ -155,11 +173,37 @@ function structuredCloneSafe(value) {
     : JSON.parse(JSON.stringify(value));
 }
 
+// Each session holds minutes of multi-car telemetry, so an unbounded store
+// grows by hundreds of megabytes across a session of play. Only the newest
+// sessions are kept; older ones are deleted when a new session registers.
+export const DEFAULT_SESSION_RETENTION = 3;
+
+// Newest first by recorded start time, with the session being recorded always
+// kept. Exported so retention is testable without an IndexedDB implementation.
+export function selectSessionsToPrune(sessions, keep = DEFAULT_SESSION_RETENTION, protectedId = '') {
+  const limit = Math.max(1, Math.floor(keep));
+  const ordered = [...sessions].sort((a, b) => {
+    const byTime = Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0);
+    return Number.isFinite(byTime) && byTime !== 0
+      ? byTime
+      : text(b.sessionId).localeCompare(text(a.sessionId));
+  });
+  const kept = new Set();
+  if (text(protectedId)) kept.add(protectedId);
+  for (const session of ordered) {
+    if (kept.size >= limit) break;
+    kept.add(session.sessionId);
+  }
+  return ordered.filter(session => !kept.has(session.sessionId)).map(session => session.sessionId);
+}
+
 export class IndexedDBTelemetryStore {
   constructor(options = {}) {
     this.indexedDB = options.indexedDB || globalThis.indexedDB;
     this.dbName = text(options.dbName, 'formula-racing-live-telemetry');
     this.storeName = text(options.storeName, 'records');
+    this.sessionStoreName = text(options.sessionStoreName, 'sessions');
+    this.retainSessions = finite(options.retainSessions, DEFAULT_SESSION_RETENTION);
     this._db = null;
     if (!this.indexedDB) throw new Error('IndexedDB is unavailable');
   }
@@ -167,18 +211,48 @@ export class IndexedDBTelemetryStore {
   async _open() {
     if (this._db) return this._db;
     this._db = await new Promise((resolve, reject) => {
-      const request = this.indexedDB.open(this.dbName, 1);
+      const request = this.indexedDB.open(this.dbName, 2);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'recordId' });
           store.createIndex('sessionId', 'sessionId', { unique: false });
         }
+        if (!db.objectStoreNames.contains(this.sessionStoreName)) {
+          db.createObjectStore(this.sessionStoreName, { keyPath: 'sessionId' });
+        }
       };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error || new Error('Unable to open telemetry database'));
     });
     return this._db;
+  }
+
+  async _request(storeName, mode, run) {
+    const db = await this._open();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(storeName, mode);
+      const request = run(transaction.objectStore(storeName));
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Telemetry request failed'));
+    });
+  }
+
+  // Records the session so retention has a start time to order by, then drops
+  // the sessions that fall outside the retention window.
+  async registerSession(envelope) {
+    const sessionId = text(envelope?.sessionId);
+    if (!sessionId) return;
+    await this._request(this.sessionStoreName, 'readwrite', store => store.put({
+      sessionId,
+      createdAt: text(envelope.createdAt, new Date().toISOString()),
+      sessionType: text(envelope.sessionType),
+    }));
+    const known = await this._request(this.sessionStoreName, 'readonly', store => store.getAll());
+    for (const staleId of selectSessionsToPrune(known, this.retainSessions, sessionId)) {
+      await this.clearSession(staleId);
+      await this._request(this.sessionStoreName, 'readwrite', store => store.delete(staleId));
+    }
   }
 
   async appendBatch(records) {
@@ -218,9 +292,10 @@ export class IndexedDBTelemetryStore {
   }
 }
 
-// Keeps a complete in-memory shadow until page unload, and transparently uses
-// it if IndexedDB is blocked (private mode, quota, browser policy, or open
-// failure). This makes persistence best-effort without interrupting a race.
+// Writes to IndexedDB first and only keeps records in memory once IndexedDB is
+// unavailable (private mode, quota, browser policy, or open failure). A healthy
+// session therefore holds no in-memory duplicate, which a 22-car race cannot
+// afford, while a blocked one still finishes without interrupting the race.
 export class FallbackTelemetryStore {
   constructor(primary, fallback = new MemoryTelemetryStore()) {
     this.primary = primary;
@@ -228,19 +303,38 @@ export class FallbackTelemetryStore {
     this.primaryFailed = false;
   }
 
-  async appendBatch(records) {
-    await this.fallback.appendBatch(records);
+  async registerSession(envelope) {
     if (this.primaryFailed) return;
-    try { await this.primary.appendBatch(records); }
+    try { await this.primary.registerSession?.(envelope); }
     catch { this.primaryFailed = true; }
   }
 
+  async appendBatch(records) {
+    if (!this.primaryFailed) {
+      try {
+        await this.primary.appendBatch(records);
+        return;
+      } catch { this.primaryFailed = true; }
+    }
+    await this.fallback.appendBatch(records);
+  }
+
+  // Records written before IndexedDB failed stay in IndexedDB, so a degraded
+  // session is the union of both stores, ordered by sequence.
   async readSession(sessionId) {
+    const persisted = [];
     if (!this.primaryFailed) {
       try { return await this.primary.readSession(sessionId); }
       catch { this.primaryFailed = true; }
+    } else {
+      try { persisted.push(...await this.primary.readSession(sessionId)); }
+      catch { /* IndexedDB is gone; the memory fallback is all that is left. */ }
     }
-    return this.fallback.readSession(sessionId);
+    const byRecordId = new Map();
+    for (const record of [...persisted, ...await this.fallback.readSession(sessionId)]) {
+      byRecordId.set(record.recordId, record);
+    }
+    return [...byRecordId.values()].sort((a, b) => a.sequence - b.sequence);
   }
 
   async clearSession(sessionId) {
@@ -278,7 +372,9 @@ export class RaceTelemetryRecorder {
     if (this.sampleHz <= 0 || this.sampleHz > 100) throw new RangeError('sampleHz must be between 0 and 100');
     this.samplePeriod = 1 / this.sampleHz;
     this.store = options.store || createTelemetryStore(options.storage);
+    void this.store.registerSession?.(this.envelope);
     this.sequence = 0;
+    this.ended = false;
     this.elapsed = 0;
     this.nextSampleAt = this.samplePeriod;
     this.started = false;
@@ -317,6 +413,33 @@ export class RaceTelemetryRecorder {
     const newRecords = records.filter(record => record.event !== 'session_started');
     this._persist(newRecords);
     return records;
+  }
+
+  // Terminates the stream with an explicit reason and the laps actually
+  // completed, which a configured lap count cannot express for a time trial or
+  // an abandoned session. Repeat calls are ignored.
+  end(session, options = {}) {
+    if (this.ended) return [];
+    this.ended = true;
+    const entries = Array.isArray(session?.entries) ? session.entries : [];
+    const completedLaps = entries.reduce(
+      (most, entry) => Math.max(most, Array.isArray(entry.lapTimes) ? entry.lapTimes.length : 0),
+      0,
+    );
+    const player = entries.find(entry => entry.isPlayer);
+    const reason = text(options.reason).trim()
+      || (session?.results ? 'classified' : 'abandoned');
+    const record = this._record('event', session, {
+      event: 'session_ended',
+      reason,
+      completedLaps,
+      playerCompletedLaps: Array.isArray(player?.lapTimes) ? player.lapTimes.length : 0,
+      playerBestLapSeconds: optionalFinite(player?.bestLap),
+      classified: !!session?.results,
+      durationSeconds: finite(this.elapsed),
+    });
+    this._persist([record]);
+    return [record];
   }
 
   _prime(session) {
@@ -447,6 +570,7 @@ export class RaceTelemetryRecorder {
       userId: this.envelope.user.id,
       sequence,
       type,
+      sessionType: this.envelope.sessionType,
       simulationTimeSeconds: finite(sampleTime),
       raceTimeSeconds: finite(session?.raceTime),
       ...payload,

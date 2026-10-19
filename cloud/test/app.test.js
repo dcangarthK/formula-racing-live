@@ -86,9 +86,27 @@ describe('telemetry ingest HTTP service', () => {
     assert.equal(body.expiresAt, new Date((NOW + 900) * 1000).toISOString());
     assert.deepEqual(body.limits, { maxBatchRecords: 3, maxBodyBytes: 32_768 });
     assert.equal(publisher.sessions.length, 1);
-    assert.deepEqual(publisher.sessions[0], envelope);
+    assert.deepEqual(publisher.sessions[0], { ...envelope, sessionType: 'race' });
     assert.equal(publisher.sessions[0].user.displayName, 'Test Driver');
     assert.deepEqual(publisher.sessions[0].metadata, { mode: 'race', circuit: 'test' });
+  });
+
+  test('carries the declared session type and rejects an unknown one', async () => {
+    const trial = await json('/v1/sessions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'https://game.example' },
+      body: JSON.stringify({ ...envelope, sessionType: 'time_trial' }),
+    });
+    assert.equal(trial.response.status, 201);
+    assert.equal(publisher.sessions[0].sessionType, 'time_trial');
+
+    const bogus = await json('/v1/sessions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'https://game.example' },
+      body: JSON.stringify({ ...envelope, sessionType: 'practice' }),
+    });
+    assert.equal(bogus.response.status, 400);
+    assert.equal(bogus.body.field, 'sessionType');
   });
 
   test('accepts validated records and publishes each record', async () => {

@@ -18,7 +18,11 @@ The telemetry and GCP-ready vertical slice is implemented:
   retirements, and final classification;
 - IndexedDB persistence with an in-memory fallback;
 - JSON and NDJSON serialization, plus JSON download from Results;
-- Node contract tests and real-browser coverage against a 22-car session.
+- Node contract tests and real-browser coverage against a 22-car session;
+- `sessionType` (`race`/`qualifying`/`time_trial`) on the envelope, every
+  record and the ingest API; the real venue name; a `session_ended` event with
+  the termination reason and the laps actually completed; documented units;
+  IndexedDB retention of the three newest sessions with no in-memory duplicate.
 - optional 250 ms browser batching with bounded retries and token renewal;
 - a Cloud Run ingest service that publishes session envelopes and records to
   Pub/Sub with stable idempotency attributes;
