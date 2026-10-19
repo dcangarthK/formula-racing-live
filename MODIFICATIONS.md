@@ -42,3 +42,14 @@ layer. It will not silently replace the upstream fictional championship.
   1.9 GB to about 180 MB, measured with `tools/sim-telemetry.mjs`.
 - Routed each tier to its own Pub/Sub topic, with BigQuery landing tables,
   curated tables, merge queries and a near-live timing view.
+
+## 2026-10-20 — player identity
+
+- Renamed the upstream author's constructor to the fictional Apex Nine (APX)
+  with Ruben Castellane (CAS) in the lead seat, and removed the presenter
+  credit from the menu footer. Upstream copyright, third-party notices and the
+  trademark disclaimer are unchanged.
+- Added player-authored teams: a saved profile replaces the player's seat on
+  the grid — name, entrant name, three-letter code, body and accent colour,
+  driver name, abbreviation and car number — leaving team performance and the
+  rest of the grid untouched.

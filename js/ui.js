@@ -1,6 +1,7 @@
 // Menu system: main, team/driver select, track select, settings, loading,
 // quali results, race results, championship standings, pause.
-import { TEAMS, DRIVERS, CALENDAR, SEASON } from './data.js';
+import { TEAMS, DRIVERS, CALENDAR, SEASON, applyPlayerTeamProfile } from './data.js';
+import { teamProfileStore, toHex } from './teamProfile.js';
 import { TRACKS } from './tracks.js';
 import { fmtTime } from './format.js';
 import { driverIdentity } from './driverIdentity.js';
@@ -108,6 +109,7 @@ export class UI {
       if (!items.length) return;
       e.preventDefault();
       let cur = screen._navFocus && items.includes(screen._navFocus) ? screen._navFocus : null;
+      if (!cur && items.includes(document.activeElement)) cur = document.activeElement;
       if (key === 'Enter') {
         (cur || items[0]).click();
         return;
@@ -228,6 +230,8 @@ export class UI {
 
   // ============ MAIN ============
   showMain(champ) {
+    // Kept so the team editor can redraw this screen after a save.
+    this._lastChampionship = champ;
     this.hideAll();
     const el = this.screens.main;
     el.className = 'screen active menu-screen main-screen';
@@ -240,6 +244,7 @@ export class UI {
     } else {
       champTile = `<button type="button" class="nav-item" data-a="champ"><span><h3>CHAMPIONSHIP</h3><p>Full ${SEASON} season — 24 rounds, full calendar, points battle</p></span></button>`;
     }
+    const team = teamProfileStore.get();
     const lastRace = this.lastSelection && CALENDAR.find(r => r.trackId === this.lastSelection.trackId);
     const lastDriver = this.lastSelection && DRIVERS.find(d => d.id === this.lastSelection.driverId);
     const raceNow = lastRace && lastDriver
@@ -253,7 +258,8 @@ export class UI {
         <label for="driver-display-name">RACING AS</label>
         <input id="driver-display-name" maxlength="48" autocomplete="name" aria-describedby="driver-profile-note">
         <span id="driver-profile-note">Your stable user ID associates this name with race telemetry.</span>
-      </div><div class="main-nav">
+      </div>
+      <div class="main-nav">
         ${raceNow}
         <button type="button" class="nav-item pilot-run" data-a="pilot"><span><h3>APEX NINE RACE WEEKEND · GREENWOOD FOREST</h3><p>CAS · FP1 · physical Q1/Q2/Q3 · formation lap · race</p></span></button>
         <button type="button" class="nav-item" data-a="quick"><span><h3>QUICK RACE</h3><p>Jump straight into a race weekend — any team, any circuit</p></span></button>
@@ -261,7 +267,34 @@ export class UI {
         <button type="button" class="nav-item" data-a="trial"><span><h3>TIME TRIAL</h3><p>Empty track, low fuel, soft tyres — chase the perfect lap</p></span></button>
         ${champ && champ.active ? '<button type="button" class="nav-item" data-a="standings"><span><h3>STANDINGS</h3><p>Drivers & Constructors championship tables</p></span></button>' : ''}
         <button type="button" class="nav-item" data-a="settings"><span><h3>SETTINGS</h3><p>Difficulty, race distance, assists, audio, graphics</p></span></button>
-      </div></div>
+      </div>
+      <details class="team-profile" ${team.custom ? 'open' : ''}>
+        <summary><span class="team-chip" style="--chip:${toHex(team.color)};--chip-accent:${toHex(team.accent)}"></span>MY TEAM — ${team.teamName} · ${team.driverCode} #${team.driverNumber}</summary>
+        <div class="team-grid">
+          <label for="team-name">TEAM NAME</label>
+          <input id="team-name" maxlength="24" value="${attr(team.teamName)}">
+          <label for="team-code">CODE</label>
+          <input id="team-code" maxlength="3" value="${attr(team.teamCode)}">
+          <label for="team-color">BODY</label>
+          <input id="team-color" type="color" value="${toHex(team.color)}">
+          <label for="team-accent">ACCENT</label>
+          <input id="team-accent" type="color" value="${toHex(team.accent)}">
+          <label for="team-driver-first">DRIVER</label>
+          <input id="team-driver-first" maxlength="18" value="${attr(team.driverFirstName)}">
+          <label for="team-driver-last">SURNAME</label>
+          <input id="team-driver-last" maxlength="18" value="${attr(team.driverLastName)}">
+          <label for="team-driver-code">ABBREV.</label>
+          <input id="team-driver-code" maxlength="3" value="${attr(team.driverCode)}">
+          <label for="team-driver-number">CAR №</label>
+          <input id="team-driver-number" type="number" min="1" max="99" value="${team.driverNumber}">
+        </div>
+        <div class="team-actions">
+          <button type="button" class="f1-btn" id="team-save"><span>SAVE TEAM</span></button>
+          <button type="button" class="f1-btn ghost" id="team-reset"><span>RESET</span></button>
+          <span id="team-profile-note">Your team, livery and driver appear on the grid, the timing tower and in telemetry.</span>
+        </div>
+      </details>
+      </div>
       <div class="menu-footer">
         <span class="key-hint"><b>↑ ↓ ← →</b> drive</span>
         <span class="key-hint"><b>SPACE</b> override boost</span>
@@ -271,6 +304,7 @@ export class UI {
         <span class="key-hint"><b>ESC</b> pause</span>
         <span class="footer-brand">FORMULA RACING LIVE ${SEASON} — an original racing simulation</span>
       </div>`;
+    this._bindTeamProfile(el);
     const displayName = el.querySelector('#driver-display-name');
     if (displayName) {
       displayName.value = this.driverProfile.displayName;
@@ -290,6 +324,31 @@ export class UI {
         else this.cb('menu', a);
       }));
     this._enter(el);
+  }
+
+
+  _bindTeamProfile(el) {
+    const details = el.querySelector('.team-profile');
+    if (!details) return;
+    const field = id => el.querySelector(`#${id}`);
+    const read = () => ({
+      teamName: field('team-name').value,
+      teamCode: field('team-code').value,
+      color: field('team-color').value,
+      accent: field('team-accent').value,
+      driverFirstName: field('team-driver-first').value,
+      driverLastName: field('team-driver-last').value,
+      driverCode: field('team-driver-code').value,
+      driverNumber: field('team-driver-number').value,
+    });
+    const apply = (profile) => {
+      // The grid records are shared, so writing the profile into them updates
+      // the livery, the timing tower and telemetry for the next session.
+      applyPlayerTeamProfile(profile);
+      this.showMain(this._lastChampionship);
+    };
+    field('team-save')?.addEventListener('click', () => apply(teamProfileStore.save(read())));
+    field('team-reset')?.addEventListener('click', () => apply(teamProfileStore.reset()));
   }
 
   // ============ TEAM SELECT ============
@@ -785,6 +844,14 @@ export class UI {
     this._enter(el);
   }
   hidePause() { this.screens.pause.classList.remove('active'); }
+}
+
+// Team and driver names are player input; escape them before they are
+// interpolated into menu markup or an attribute value.
+function attr(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function header(title) {

@@ -59,6 +59,19 @@ For development, `python3 tools/devserver.py 8341 .` adds
 - Keyboard, gamepad, and responsive touch controls; a legally self-contained
   synthesized engine/effects package; adaptive graphics; and three camera views.
 
+## Make it your team
+
+The main menu has a **MY TEAM** panel. Set a team name and three-letter code,
+pick the body and accent colours, and name the driver in the lead seat with
+their abbreviation and car number. The grid keeps eleven constructors and
+twenty-two drivers: your team replaces the default entry rather than adding a
+twelfth, so performance, the calendar and saved championships are unaffected.
+A car number another driver already carries is refused.
+
+Your team appears on the car's livery and deck lettering, in the timing tower,
+on the championship tables and in the telemetry stream. It is stored in the
+browser under `formula_racing_live_team_v1`; RESET restores the shipped team.
+
 ## Controls
 
 | Input | Action |

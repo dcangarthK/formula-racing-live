@@ -27,7 +27,9 @@
   and merge queries under `cloud/bigquery/`.
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
-- [ ] Add optional organisation/team customisation as a later, additive feature.
+- [x] Added player-authored teams: name, code, livery colours, driver name,
+  abbreviation and car number, persisted locally and applied to the grid, the
+  car, the timing tower and telemetry.
 
 ## Current hand-off
 

@@ -58,13 +58,14 @@ const BUDGETS = {
   menuBootBytes: 2_300_000,
   selectedSessionCumulativeBytes: 27_000_000,
   allThemeInventoryBytes: 44_000_000,
-  // +3 for the fork's telemetry modules: driverIdentity, raceTelemetry and
-  // telemetryUplink. They are small — every byte budget above still passes
-  // with room — but they are three more module requests per session.
-  moduleFiles: 58,
+  // +3 for the fork's telemetry modules (driverIdentity, raceTelemetry,
+  // telemetryUplink) and +1 for teamProfile, which the menu loads so a player
+  // can field their own team. All four are small — every byte budget above
+  // still passes with room — but each is one more module request per session.
+  moduleFiles: 59,
   menuBootRequests: 65,
-  selectedSessionRequests: 72,
-  allThemeInventoryRequests: 74,
+  selectedSessionRequests: 73,
+  allThemeInventoryRequests: 75,
 };
 
 function fail(message) {

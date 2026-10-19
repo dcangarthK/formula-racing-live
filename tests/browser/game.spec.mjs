@@ -942,3 +942,64 @@ test('@mobile first-run guide, HUD, and touch controls fit the viewport and acce
   ]);
   expect(errors).toEqual([]);
 });
+
+test('a custom team reaches the grid, the car and the next session, and survives a reload', async ({ page }) => {
+  const errors = await boot(page);
+
+  await page.locator('.team-profile > summary').click();
+  await page.locator('#team-name').fill('Kubayi');
+  await page.locator('#team-code').fill('kby');
+  await page.locator('#team-color').fill('#ff7a00');
+  await page.locator('#team-driver-first').fill('Duncan');
+  await page.locator('#team-driver-last').fill('Kubayi');
+  await page.locator('#team-driver-code').fill('');
+  await page.locator('#team-driver-number').fill('44');
+  await page.getByRole('button', { name: 'SAVE TEAM' }).click();
+
+  await expect(page.locator('.team-profile > summary')).toContainText('Kubayi · KUB #44');
+  expect(await page.evaluate(async () => {
+    const { TEAMS, DRIVERS } = await import('/js/data.js');
+    const team = TEAMS.find(entry => entry.id === 'apexnine');
+    const driver = DRIVERS.find(entry => entry.id === 'castellane');
+    return {
+      name: team.name, fullName: team.fullName, code: team.code, color: team.color,
+      perf: team.perf, driver: `${driver.firstName} ${driver.lastName}`,
+      driverCode: driver.code, num: driver.num,
+      // The team-mate and the rest of the grid must be untouched.
+      mate: DRIVERS.find(entry => entry.id === 'marchetti').num,
+      otherTeam: TEAMS.find(entry => entry.id === 'vantara').name,
+    };
+  })).toEqual({
+    name: 'Kubayi', fullName: 'Kubayi Racing', code: 'KBY', color: 0xFF7A00, perf: 0.97,
+    driver: 'Duncan Kubayi', driverCode: 'KUB', num: 44, mate: 7, otherTeam: 'Vantara',
+  });
+
+  // `seed` clears storage on every navigation, so persistence is shown by
+  // re-seeding exactly what the editor wrote and loading the game fresh.
+  const stored = await page.evaluate(() => localStorage.getItem('formula_racing_live_team_v1'));
+  expect(JSON.parse(stored)).toMatchObject({
+    version: 1, custom: true, teamName: 'Kubayi', teamCode: 'KBY', driverNumber: 44,
+  });
+  await seed(page, { apexf1_onboarding_v1: '1', formula_racing_live_team_v1: stored });
+  await page.goto('/');
+  await expect(page.locator('.team-profile > summary')).toContainText('Kubayi · KUB #44');
+
+  // The identity has to reach a real session: the driver card, the race entry
+  // and the livery the car is actually painted with.
+  await expect(page.locator('.drv[data-d="castellane"]')).toHaveCount(0);
+  await page.getByRole('button', { name: /TIME TRIAL/ }).click();
+  await expect(page.locator('.drv[data-d="castellane"]')).toHaveAttribute('aria-label', /Duncan Kubayi, number 44/i);
+  await page.locator('.drv[data-d="castellane"]').click();
+  await page.getByRole('button', { name: /CONTINUE/ }).click();
+  await page.locator('.track-card[data-t="melbourne"]').click();
+  await page.waitForFunction(
+    () => window.__game?.session && ['race', 'quali'].includes(window.__game.state),
+    null, { timeout: 30_000 },
+  );
+  expect(await page.evaluate(() => {
+    const entry = window.__game.session.player;
+    return { team: entry.team.name, code: entry.driver.code, num: entry.driver.num, color: entry.team.color };
+  })).toEqual({ team: 'Kubayi', code: 'KUB', num: 44, color: 0xFF7A00 });
+
+  expect(errors).toEqual([]);
+});
