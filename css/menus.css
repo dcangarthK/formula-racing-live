@@ -485,7 +485,7 @@
   .main-nav .nav-item p { font-size: 11px; line-height: 1.35; }
   .menu-footer { padding: 10px 16px 14px; gap: 8px; font-size: 10px; }
   .main-screen .menu-footer .key-hint { display: none; }
-  .menu-footer .footer-brand, .menu-footer .tacn-mark { margin-left: 0; white-space: normal; }
+  .menu-footer .footer-brand { margin-left: 0; white-space: normal; }
   .season-strip { padding: 8px 16px; }
   .card-grid { grid-template-columns: 1fr; }
 }
@@ -508,38 +508,8 @@
   .select-card { transition: none; }
 }
 
-/* ===== 16. The AI Consulting Network brand layer ========================= */
-/* The owner's brand mark. STRICTLY MONOCHROME: black, white and white-alpha
-   only — no accent hue, no rounded corners, no glow. It has to read as a
-   separate, quieter voice than the game's own red-accented chrome, so it
-   deliberately introduces no new colour token. Square edges everywhere.
-   The sans stack mirrors Inter's metrics with system fallbacks (nothing is
-   fetched: the app ships no webfonts and must keep working offline). */
-:root {
-  --tacn-sans: 'Inter', 'Inter var', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-  --tacn-serif: Georgia, 'Times New Roman', 'Times', serif;
-  --tacn-black: #0A0A0A;
-  --tacn-hair: rgba(255, 255, 255, 0.1);
-}
-
-/* --- main-menu footer credit ------------------------------------------- */
-/* The footer is a single flex row in style.css; the brand line is the last
+/* ===== 16. Main-menu footer ============================================= */
+/* The footer is a single flex row in style.css; the title line is the last
    item, so allow wrapping rather than letting it overflow on narrow windows. */
 .menu-footer { flex-wrap: wrap; row-gap: 8px; }
 .menu-footer .footer-brand { margin-left: auto; }
-.tacn-mark {
-  font-family: var(--tacn-sans);
-  font-size: 10px;
-  font-weight: 500;
-  font-style: normal;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: #fff;
-  opacity: 0.6;
-  border-radius: 0;
-  white-space: nowrap;
-}
-
-@media (max-width: 900px) {
-  .tacn-mark { white-space: normal; letter-spacing: 0.16em; }
-}

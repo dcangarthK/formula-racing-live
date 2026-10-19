@@ -41,11 +41,6 @@ const ENGINE_GLYPH = (() => {
   return Object.fromEntries(marques.map((m, i) => [m, glyphs[i % glyphs.length]]));
 })();
 
-// The owner's brand mark. Monochrome, no colour, square edges — see the
-// `.tacn-*` rules in css/menus.css.
-const TACN_URL = 'THEAICONSULTINGNETWORK.COM';
-const TACN_FOOTER = `<span class="tacn-mark">PRESENTED BY THE AI CONSULTING NETWORK — ${TACN_URL}</span>`;
-
 // Modified for Formula Racing Live branding; original copyright is retained in NOTICE.
 // Venue label: each calendar round carries an invented `circuitName`.
 function circuitLabel(race, track) {
@@ -275,7 +270,6 @@ export class UI {
         <span class="key-hint"><b>C</b> camera</span>
         <span class="key-hint"><b>ESC</b> pause</span>
         <span class="footer-brand">FORMULA RACING LIVE ${SEASON} — an original racing simulation</span>
-        ${TACN_FOOTER}
       </div>`;
     const displayName = el.querySelector('#driver-display-name');
     if (displayName) {
