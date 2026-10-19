@@ -363,6 +363,7 @@ export class HUD {
     this.circuit = circuit;
     this._resetDerived();
     this._timeTrialDelta = null;
+    this._timeTrialBest = 0;
     const race = session.mode === 'race';
     this.$('tw-title').textContent = session.trial ? 'TIME TRIAL'
       : session.mode === 'practice' ? 'PRACTICE · FP1'
@@ -475,7 +476,13 @@ export class HUD {
         const cur = (s.phase === 'racing' || s.phase === 'finished') && p.lap >= 0 ? s.raceTime - p.lapStart : 0;
         this.$('t-cur').textContent = fmtTime(cur);
         this.$('t-last').textContent = p.lastLap ? fmtTime(p.lastLap) : '—';
-        this.$('t-best').textContent = p.bestLap ? fmtTime(p.bestLap) : '—';
+        // In a time trial BEST means the personal best, which is loaded from
+        // storage before the first lap is set. Without it this frame would
+        // erase a stored best and show a dash until the driver beat nothing.
+        const best = s.trial
+          ? Math.min(...[p.bestLap, this._timeTrialBest].filter(value => value > 0), Infinity)
+          : p.bestLap;
+        this.$('t-best').textContent = Number.isFinite(best) && best > 0 ? fmtTime(best) : '—';
         // car stat
         const cd = ph.compoundData;
         this.$('c-tyre').textContent = cd.name;
@@ -529,7 +536,10 @@ export class HUD {
   updateTimeTrial(personalBest, delta) {
     if (!this.session?.trial) return;
     this._timeTrialDelta = typeof delta === 'number' && Number.isFinite(delta) ? delta : null;
-    if (personalBest > 0) this.$('t-best').textContent = fmtTime(personalBest);
+    if (personalBest > 0) {
+      this._timeTrialBest = personalBest;
+      this.$('t-best').textContent = fmtTime(personalBest);
+    }
     const value = this.$('t-delta');
     if (typeof delta !== 'number' || !Number.isFinite(delta)) {
       value.textContent = '—';

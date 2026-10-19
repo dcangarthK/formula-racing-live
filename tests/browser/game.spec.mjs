@@ -22,6 +22,15 @@ async function boot(page, values = { apexf1_onboarding_v1: '1' }, path = '/') {
   return errors;
 }
 
+// A session now stages at a start gate: the car is built and the HUD is live,
+// but driving input is ignored until the driver clears the gate with Enter or
+// the START SESSION button. A test that drives has to clear it first.
+async function clearStartGate(page) {
+  await page.waitForFunction(() => window.__game?.awaitingStart === true, null, { timeout: 30_000 });
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => window.__game?.awaitingStart === false, null, { timeout: 30_000 });
+}
+
 async function chooseDriverAndTrack(page, mode = 'TIME TRIAL', beforeTrack = null) {
   await page.getByRole('button', { name: new RegExp(mode) }).click();
   await page.locator('.drv[data-d="hacker"]').click();
@@ -249,6 +258,7 @@ test('main menu is keyboard-accessible and Race Now restores the last event', as
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => window.__game?.state === 'race' && window.__game.session, null, { timeout: 30_000 });
   await expect(page.locator('#hud')).toHaveClass(/active/);
+  await clearStartGate(page);
 
   await page.keyboard.down('ArrowUp');
   await page.waitForFunction(() => window.__game.keys.ArrowUp === true);
@@ -420,7 +430,7 @@ test('loading focus loss pauses on onboarding exit and gamepad input waits for n
     steer: 0, throttle: 0, brake: 0, boost: false, shiftUp: false, shiftDown: false,
   });
   expect(gamepad.neutralNeedsNeutral).toBe(false);
-  expect(gamepad.accepted.steer).toBeCloseTo(-0.6, 12);
+  expect(gamepad.accepted.steer).toBeCloseTo(-((0.6 - 0.12) / 0.88), 12);
   expect(gamepad.accepted).toMatchObject({
     throttle: 0.9, brake: 0.7, boost: true, shiftUp: true, shiftDown: false,
   });
@@ -580,6 +590,7 @@ test('manual shifts, generated-seed restart, and rendering teardown preserve lif
     apexf1_settings: JSON.stringify({ autoGear: false }),
   });
   await chooseDriverAndTrack(page);
+  await clearStartGate(page);
 
   const initial = await page.evaluate(() => {
     const game = window.__game;
