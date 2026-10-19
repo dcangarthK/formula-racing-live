@@ -540,42 +540,6 @@
   white-space: nowrap;
 }
 
-/* --- results-screen card ---------------------------------------------- */
-.tacn-card {
-  margin: 28px 0 4px;
-  padding: 26px 30px;
-  background: var(--tacn-black);
-  border: 1px solid var(--tacn-hair);
-  border-radius: 0;
-  text-align: center;
-}
-.tacn-card-head {
-  /* serif italic — the one place the card borrows the game's display voice */
-  font-family: var(--tacn-serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 30px;
-  line-height: 1.1;
-  letter-spacing: 0.01em;
-  color: #fff;
-  margin: 0;
-}
-.tacn-card-sub {
-  font-family: var(--tacn-sans);
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  line-height: 1.9;
-  color: #fff;
-  opacity: 0.6;
-  margin: 12px auto 0;
-  max-width: 640px;
-}
-
 @media (max-width: 900px) {
   .tacn-mark { white-space: normal; letter-spacing: 0.16em; }
-  .tacn-card { padding: 20px 18px; }
-  .tacn-card-head { font-size: 24px; }
-  .tacn-card-sub { font-size: 10px; letter-spacing: 0.12em; }
 }

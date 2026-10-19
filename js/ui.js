@@ -705,7 +705,6 @@ export class UI {
             <td class="ftime ${r.fastestLap ? 'fl' : ''}">${r.bestLap ? fmtTime(r.bestLap) : '—'}${r.fastestLap ? ' ●' : ''}</td>
             <td class="pts${r.isPlayer ? ' pts-count' : ''}">${r.isPlayer ? '' : (r.points || '')}</td></tr>`).join('')}
         </table>
-        ${tacnCard()}
         <div class="btn-row">
           <button class="f1-btn ghost" id="btn-export-telemetry"><span>DOWNLOAD TELEMETRY</span></button>
           <button class="f1-btn" id="btn-continue"><span>${champActive ? 'CONTINUE →' : 'MAIN MENU'}</span></button>
@@ -792,14 +791,6 @@ export class UI {
     this._enter(el);
   }
   hidePause() { this.screens.pause.classList.remove('active'); }
-}
-
-// Owner's brand card under the race classification.
-function tacnCard() {
-  return `<section class="tacn-card">
-    <h3 class="tacn-card-head">BUILT BY AI AGENTS</h3>
-    <p class="tacn-card-sub">This entire game was built autonomously by AI. Want this capability in your business? ${TACN_URL}</p>
-  </section>`;
 }
 
 function header(title) {
