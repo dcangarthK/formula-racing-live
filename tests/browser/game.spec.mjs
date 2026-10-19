@@ -82,6 +82,58 @@ async function captureSeededInitialSession(page, value) {
   return { errors, snapshot };
 }
 
+test('driver profile keeps a stable opaque user ID when the racer name changes', async ({ page, context }) => {
+  const errors = await boot(page);
+  const input = page.getByLabel('RACING AS');
+
+  await expect(input).toHaveValue('Driver');
+  await input.fill('  Ada   Racer  ');
+  await input.blur();
+
+  const first = await page.evaluate(() => JSON.parse(localStorage.getItem('formula_racing_live_driver_v1')));
+  expect(first.displayName).toBe('Ada Racer');
+  expect(first.userId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+
+  const reloadedPage = await context.newPage();
+  await reloadedPage.goto('/');
+  await expect(reloadedPage.getByLabel('RACING AS')).toHaveValue('Ada Racer');
+  const reloaded = await reloadedPage.evaluate(() => JSON.parse(localStorage.getItem('formula_racing_live_driver_v1')));
+  expect(reloaded.userId).toBe(first.userId);
+  expect(errors).toEqual([]);
+  await reloadedPage.close();
+});
+
+test('live race session records exportable all-car telemetry with the active user ID', async ({ page }) => {
+  const errors = await boot(page);
+  const input = page.getByLabel('RACING AS');
+  await input.fill('Telemetry Driver');
+  await input.blur();
+  await chooseDriverAndTrack(page, 'QUICK RACE');
+
+  const capture = await page.evaluate(async () => {
+    const game = window.__game;
+    game.telemetryRecorder.step(game.session, 0.05);
+    await game.telemetryRecorder.flush();
+    const envelope = JSON.parse(await game.telemetryRecorder.exportJSON());
+    const storedIdentity = JSON.parse(localStorage.getItem('formula_racing_live_driver_v1'));
+    const sample = envelope.records.find(record => record.type === 'telemetry');
+    return {
+      sessionId: envelope.session.sessionId,
+      exportedUser: envelope.session.user,
+      storedIdentity,
+      carCount: sample?.cars?.length,
+      playerCount: sample?.cars?.filter(car => car.isPlayer).length,
+    };
+  });
+
+  expect(capture.sessionId).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(capture.exportedUser).toEqual({ id: capture.storedIdentity.userId, displayName: 'Telemetry Driver' });
+  expect(capture.carCount).toBe(22);
+  expect(capture.playerCount).toBe(1);
+  expect(errors).toEqual([]);
+  await page.evaluate(() => window.__game.teardownSession());
+});
+
 test('query seed exposes a numeric seed and reproduces the initial simulation state', async ({ page, context }) => {
   const first = await captureSeededInitialSession(page, 'browser-regression-2026');
   await page.close();

@@ -3,6 +3,7 @@
 import { TEAMS, DRIVERS, CALENDAR, SEASON } from './data.js';
 import { TRACKS } from './tracks.js';
 import { fmtTime } from './format.js';
+import { driverIdentity } from './driverIdentity.js';
 
 const FLAGS = {
   melbourne: '🇦🇺', shanghai: '🇨🇳', suzuka: '🇯🇵', bahrain: '🇧🇭', jeddah: '🇸🇦',
@@ -71,6 +72,8 @@ const TRACK_THEME = {
 export class UI {
   constructor(cb) {
     this.cb = cb;   // (action, payload) => {}
+    this.driverIdentity = driverIdentity;
+    this.driverProfile = this.driverIdentity.getProfile();
     this.settings = this._loadSettings();
     this.lastSelection = this._loadLastSelection();
     this.sel = {
@@ -251,7 +254,11 @@ export class UI {
       <div class="menu-bg" aria-hidden="true"><div class="bg-carbon"></div><div class="bg-grid"></div><div class="bg-vignette"></div></div>
       ${header('MAIN <small>MENU</small>')}
       ${seasonStrip(champ)}
-      <div class="menu-body"><div class="main-nav">
+      <div class="menu-body"><div class="driver-profile" aria-label="Telemetry driver profile">
+        <label for="driver-display-name">RACING AS</label>
+        <input id="driver-display-name" maxlength="48" autocomplete="name" aria-describedby="driver-profile-note">
+        <span id="driver-profile-note">Your stable user ID associates this name with race telemetry.</span>
+      </div><div class="main-nav">
         ${raceNow}
         <button type="button" class="nav-item pilot-run" data-a="pilot"><span><h3>TACN RACE WEEKEND · GREENWOOD FOREST</h3><p>AVI · FP1 · physical Q1/Q2/Q3 · formation lap · race</p></span></button>
         <button type="button" class="nav-item" data-a="quick"><span><h3>QUICK RACE</h3><p>Jump straight into a race weekend — any team, any circuit</p></span></button>
@@ -270,6 +277,16 @@ export class UI {
         <span class="footer-brand">FORMULA RACING LIVE ${SEASON} — an original racing simulation</span>
         ${TACN_FOOTER}
       </div>`;
+    const displayName = el.querySelector('#driver-display-name');
+    if (displayName) {
+      displayName.value = this.driverProfile.displayName;
+      const saveProfile = () => {
+        this.driverProfile = this.driverIdentity.setDisplayName(displayName.value);
+        displayName.value = this.driverProfile.displayName;
+      };
+      displayName.addEventListener('change', saveProfile);
+      displayName.addEventListener('blur', saveProfile);
+    }
     el.querySelectorAll('.nav-item').forEach(n =>
       n.addEventListener('click', () => {
         // 'champNew' is its own action in the callback protocol; the rest of the
@@ -649,10 +666,12 @@ export class UI {
           <div class="trial-time">${p.bestLap ? fmtTime(p.bestLap) : '—'}</div>
           <div class="btn-row" style="justify-content:center">
             <button class="f1-btn" id="btn-again"><span>RUN IT AGAIN</span></button>
+            <button class="f1-btn ghost" id="btn-export-telemetry"><span>DOWNLOAD TELEMETRY</span></button>
             <button class="f1-btn ghost" id="btn-menu"><span>MAIN MENU</span></button>
           </div>
         </div><div class="menu-footer"><span>${race.gp}</span></div>`;
       el.querySelector('#btn-again').addEventListener('click', () => this.cb('restartRace'));
+      el.querySelector('#btn-export-telemetry').addEventListener('click', () => this.cb('exportTelemetry'));
       el.querySelector('#btn-menu').addEventListener('click', () => this.cb('back', 'main'));
       this._enter(el);
       return;
@@ -688,12 +707,14 @@ export class UI {
         </table>
         ${tacnCard()}
         <div class="btn-row">
+          <button class="f1-btn ghost" id="btn-export-telemetry"><span>DOWNLOAD TELEMETRY</span></button>
           <button class="f1-btn" id="btn-continue"><span>${champActive ? 'CONTINUE →' : 'MAIN MENU'}</span></button>
           ${champActive ? '' : '<button class="f1-btn ghost" id="btn-restart"><span>RESTART RACE</span></button>'}
         </div>
       </div>
       <div class="menu-footer"><span>${race.gp}${fastestLap ? ` · FASTEST LAP: ${fastestLap.name} ${fmtTime(fastestLap.time)}` : ''}</span></div>`;
     el.querySelector('#btn-continue').addEventListener('click', () => this.cb(champActive ? 'afterRaceChamp' : 'back', 'main'));
+    el.querySelector('#btn-export-telemetry').addEventListener('click', () => this.cb('exportTelemetry'));
     const restartBtn = el.querySelector('#btn-restart');
     if (restartBtn) restartBtn.addEventListener('click', () => this.cb('restartRace'));
     if (player) this._countUp(el.querySelector('.pts-count'), player.points || 0);

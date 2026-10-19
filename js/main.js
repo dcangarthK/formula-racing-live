@@ -11,6 +11,8 @@ import { CAMERA_FRAMING, resolveChaseCamera } from './cameraFraming.js';
 import { advanceSteeringInput, digitalSteeringLimit } from './controls.js';
 import { cockpitFov, cockpitSeat } from './cockpit.js';
 import { createTelemetrySnapshot } from './telemetry.js';
+import { driverIdentity } from './driverIdentity.js';
+import { RaceTelemetryRecorder } from './raceTelemetry.js';
 
 // Photographic HDRI skies (CC0, PolyHaven). Load only the selected session's
 // theme; fetching all three at boot used 19.8 MB before the player chose a race.
@@ -757,6 +759,9 @@ class Game {
       case 'restartRace':
         this.startSession(this.raceConfig);
         break;
+      case 'exportTelemetry':
+        void this.exportRaceTelemetry();
+        break;
       case 'retryLoad':
         this.reloadForSessionRetry();
         break;
@@ -834,6 +839,7 @@ class Game {
     const requestedSeed = cfg.seed ?? querySeed;
     const sessionSeed = requestedSeed == null ? createRandom().state : normalizeSeed(requestedSeed);
     cfg = { ...cfg, seed: sessionSeed };
+    this.telemetryIdentity = driverIdentity.createSession(cfg.mode === 'race' ? 'race' : 'quali');
     if (cfg.fullWeekend) cfg.weekendSeed = normalizeSeed(cfg.weekendSeed ?? sessionSeed);
     // Every player-controlled session opens in the elevated rear chase view.
     // Cockpit/T-cam/nose remain available through C after the session is ready.
@@ -891,6 +897,21 @@ class Game {
         seed: sessionSeed,
         onMessage: (t, c, meta) => { this.hud.message(t, c, meta); },
       });
+      this.telemetryRecorder = new RaceTelemetryRecorder({
+        sessionId: this.telemetryIdentity.sessionId,
+        userId: this.telemetryIdentity.userId,
+        userDisplayName: this.telemetryIdentity.displayName,
+        createdAt: this.telemetryIdentity.startedAt,
+        metadata: {
+          gameVersion: '0.1.0',
+          trackId: cfg.race.trackId,
+          selectedDriverId: cfg.driverId,
+          mode: cfg.mode,
+          seed: sessionSeed,
+          laps,
+        },
+      });
+      this.telemetryRecorder.begin(this.session);
       this.applyVenueCarLighting();
       this.session.setNametags(this.ui.settings.nametags);
       this.hud.bindSession(this.session, this.circuit);
@@ -975,6 +996,11 @@ class Game {
     clearTimeout(this._sessionBuildTimer); this._sessionBuildTimer = null;
     clearTimeout(this._qualiTimer); this._qualiTimer = null;
     clearTimeout(this._resultsTimer); this._resultsTimer = null;
+    if (this.telemetryRecorder) {
+      this.lastTelemetryRecorder = this.telemetryRecorder;
+      void this.telemetryRecorder.flush().catch(() => {});
+      this.telemetryRecorder = null;
+    }
     if (this.timeTrial) { this.timeTrial.dispose(); this.timeTrial = null; }
     if (this.session) { this.session.dispose(); this.session = null; }
     if (this.circuit) { this.circuit.dispose(); this.circuit = null; }
@@ -1422,6 +1448,28 @@ class Game {
     return ok;
   }
 
+  async exportRaceTelemetry() {
+    const recorder = this.telemetryRecorder || this.lastTelemetryRecorder;
+    if (!recorder) return false;
+    try {
+      const payload = await recorder.exportJSON();
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `formula-racing-live-${recorder.envelope.sessionId}.json`;
+      link.hidden = true;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      return true;
+    } catch (error) {
+      console.error('Telemetry export failed', error);
+      return false;
+    }
+  }
+
   _nearbyOpponentAudio(session, player) {
     const entries = this._audioNearbyEntries;
     const distances = this._audioNearbyDistances;
@@ -1737,6 +1785,7 @@ class Game {
           this._trackConditionsTime = trackState.time;
         }
         s.update(dt, this.playerInput(dt));
+        this.telemetryRecorder?.step(s, dt);
         if (this.effects) this.effects.update(dt, s.entries, this.circuit?.trackState);
         if (this.timeTrial) this._timeTrialStatus = this.timeTrial.update(dt);
       });

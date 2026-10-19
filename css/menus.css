@@ -16,6 +16,31 @@
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+.driver-profile {
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 22rem);
+  align-items: center;
+  gap: .35rem .8rem;
+  margin: 0 auto 1rem;
+  max-width: 42rem;
+}
+.driver-profile label { color: #e10600; font-weight: 800; letter-spacing: .12em; }
+.driver-profile input {
+  min-width: 0;
+  padding: .65rem .8rem;
+  border: 1px solid #59606b;
+  border-radius: 3px;
+  background: #090b11;
+  color: #fff;
+  font: inherit;
+}
+.driver-profile input:focus { outline: 2px solid #e10600; outline-offset: 2px; }
+.driver-profile span { grid-column: 2; color: #aeb4bd; font-size: .72rem; }
+@media (max-width: 600px) {
+  .driver-profile { grid-template-columns: 1fr; }
+  .driver-profile span { grid-column: 1; }
+}
+
 /* ===== 1. Screen transitions ============================================= */
 /* .screen-in is re-applied by UI._enter() after a forced reflow so the
    keyframes replay even when the same screen is shown twice in a row. */

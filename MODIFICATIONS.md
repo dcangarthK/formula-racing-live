@@ -11,6 +11,8 @@ The upstream Git history and the `upstream` remote are retained.
   gameplay and simulation behaviour.
 - Reserved the fork's implementation scope for player identity, local telemetry
   recording, real-time telemetry transport and the GCP data platform.
+- Added an opaque persistent user ID, editable racing name, per-session IDs and
+  an IndexedDB-backed 20 Hz all-car telemetry/event recorder with JSON export.
 - Retained `LICENSE`, the upstream copyright in `NOTICE`, third-party notices,
   asset provenance and the upstream trademark disclaimer.
 

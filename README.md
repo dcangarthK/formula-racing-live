@@ -54,6 +54,8 @@ For development, `python3 tools/devserver.py 8341 .` adds
   difficulty levels.
 - Quick Race, one-click Race Now, Championship, and persistent Time Trial with
   personal-best ghosts and live delta timing.
+- A persistent racer identity, unique session IDs, and deterministic 20 Hz
+  all-car telemetry with local IndexedDB storage and JSON download.
 - Keyboard, gamepad, and responsive touch controls; a legally self-contained
   synthesized engine/effects package; adaptive graphics; and three camera views.
 
@@ -125,12 +127,18 @@ js/ui.js            menus and championship screens
 js/audio.js         synthesized audio and optional sample loading
 js/quality.js       adaptive graphics presets and frame-time scaling
 js/timeTrial.js     persistent personal bests, live delta, and local ghost
+js/driverIdentity.js persistent opaque user identity and per-session IDs
+js/raceTelemetry.js  authoritative all-car telemetry capture and export
 lib/                vendored Three.js r160 runtime and add-ons
 assets/             project-authored 3D model
 textures/           project-authored environment art
 tools/              validators, development harnesses, and build scripts
 tests/browser/      Playwright desktop/mobile regression coverage
 ```
+
+The telemetry schema and integration boundary are documented in
+[TELEMETRY_CONTRACT.md](TELEMETRY_CONTRACT.md). Current build status and the
+next GCP transport work are tracked in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 ## Contributing
 
