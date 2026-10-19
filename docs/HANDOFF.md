@@ -9,7 +9,7 @@ branch `codex/telemetry-foundation`. Product-facing identity is Formula Racing
 Live. Upstream licensing, copyright, third-party notices, trademark guidance,
 fictional teams, tracks, assets, physics, and gameplay remain intact.
 
-The first telemetry vertical slice is implemented:
+The telemetry and GCP-ready vertical slice is implemented:
 
 - editable racer name with a stable opaque UUID;
 - a new UUID for every qualifying/race session;
@@ -19,12 +19,17 @@ The first telemetry vertical slice is implemented:
 - IndexedDB persistence with an in-memory fallback;
 - JSON and NDJSON serialization, plus JSON download from Results;
 - Node contract tests and real-browser coverage against a 22-car session.
+- optional 250 ms browser batching with bounded retries and token renewal;
+- a Cloud Run ingest service that publishes session envelopes and records to
+  Pub/Sub with stable idempotency attributes;
+- Docker and Terraform deployment definitions under `cloud/`.
 
 ## Verified commands
 
 ```bash
 npm run check:opensource
 npm run test:telemetry
+npm run test:cloud
 npm run test:simulation-contract
 npm run test:build-script
 npm run build
@@ -33,13 +38,12 @@ npx playwright test tests/browser/game.spec.mjs \
   --project=desktop-chromium
 ```
 
-## Next slice: secure GCP transport
+## Next slice: authorized deployment
 
-Use `formula-racing-live.telemetry.v1` from `TELEMETRY_CONTRACT.md` as the
-browser-to-cloud contract. Add a backend endpoint that creates short-lived,
-session-scoped ingest credentials. The public game must never contain a static
-GCP credential or permanent bearer token. Upload should batch records, preserve
-`recordId` for idempotency, retry safely with backoff, and retain IndexedDB data
-until the backend acknowledges it.
+Follow `cloud/README.md` to build the image, bootstrap the Secret Manager
+container, add the signing-secret version outside Terraform state, and apply
+the Cloud Run/Pub/Sub resources. Then set the game endpoint and allowed origin
+and run the browser-to-Pub/Sub smoke test. The public game must never contain a
+static GCP credential or permanent bearer token.
 
 No live GCP resources, pushes, or pull requests have been created.

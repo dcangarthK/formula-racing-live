@@ -134,6 +134,52 @@ test('live race session records exportable all-car telemetry with the active use
   await page.evaluate(() => window.__game.teardownSession());
 });
 
+test('configured cloud endpoint receives the session and live telemetry without a static credential', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.FORMULA_RACING_LIVE_CONFIG = { telemetryEndpoint: 'https://telemetry.example.test' };
+    window.__telemetryRequests = [];
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (input, options = {}) => {
+      const url = String(input);
+      if (!url.startsWith('https://telemetry.example.test')) return originalFetch(input, options);
+      window.__telemetryRequests.push({ url, options });
+      if (url.endsWith('/v1/sessions')) {
+        return new Response(JSON.stringify({
+          token: 'short-lived-test-token',
+          ingestUrl: '/v1/telemetry/batches',
+          expiresAt: '2026-10-19T13:00:00.000Z',
+        }), { status: 201, headers: { 'content-type': 'application/json' } });
+      }
+      return new Response(JSON.stringify({ accepted: 1 }), {
+        status: 202,
+        headers: { 'content-type': 'application/json' },
+      });
+    };
+  });
+
+  const errors = await boot(page);
+  await page.getByLabel('RACING AS').fill('Cloud Driver');
+  await page.getByLabel('RACING AS').blur();
+  await chooseDriverAndTrack(page, 'QUICK RACE');
+  await page.waitForFunction(() => window.__telemetryRequests.some(request => request.url.endsWith('/v1/telemetry/batches')));
+
+  const requests = await page.evaluate(() => window.__telemetryRequests.map(request => ({
+    url: request.url,
+    authorization: request.options.headers?.authorization || null,
+    body: JSON.parse(request.options.body),
+  })));
+  const provision = requests.find(request => request.url.endsWith('/v1/sessions'));
+  const ingest = requests.find(request => request.url.endsWith('/v1/telemetry/batches'));
+  expect(provision.body.user.displayName).toBe('Cloud Driver');
+  expect(provision.body).not.toHaveProperty('token');
+  expect(ingest.authorization).toBe('Bearer short-lived-test-token');
+  expect(ingest.body.schemaVersion).toBe('formula-racing-live.telemetry.v1');
+  expect(ingest.body.records[0].event).toBe('session_started');
+  expect(ingest.body.userId).toBe(provision.body.user.id);
+  expect(errors).toEqual([]);
+  await page.evaluate(() => window.__game.teardownSession());
+});
+
 test('query seed exposes a numeric seed and reproduces the initial simulation state', async ({ page, context }) => {
   const first = await captureSeededInitialSession(page, 'browser-regression-2026');
   await page.close();

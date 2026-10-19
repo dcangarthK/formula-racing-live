@@ -13,6 +13,8 @@ The upstream Git history and the `upstream` remote are retained.
   recording, real-time telemetry transport and the GCP data platform.
 - Added an opaque persistent user ID, editable racing name, per-session IDs and
   an IndexedDB-backed 20 Hz all-car telemetry/event recorder with JSON export.
+- Added an optional short-lived-token browser uplink and a separately deployable
+  Cloud Run/Pub/Sub ingest service; no permanent cloud credential ships to users.
 - Retained `LICENSE`, the upstream copyright in `NOTICE`, third-party notices,
   asset provenance and the upstream trademark disclaimer.
 

@@ -34,6 +34,15 @@ jobs:
       - name: Run release and simulation checks
         run: npm test
 
+      - name: Install cloud ingest dependencies
+        run: npm --prefix cloud ci
+
+      - name: Test cloud ingest service
+        run: npm run test:cloud
+
+      - name: Build cloud ingest container
+        run: docker build cloud --tag formula-racing-live-ingest:ci
+
       - name: Build static release
         run: npm run build
 

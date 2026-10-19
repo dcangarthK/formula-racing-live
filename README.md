@@ -139,6 +139,8 @@ tests/browser/      Playwright desktop/mobile regression coverage
 The telemetry schema and integration boundary are documented in
 [TELEMETRY_CONTRACT.md](TELEMETRY_CONTRACT.md). Current build status and the
 next GCP transport work are tracked in [docs/PROGRESS.md](docs/PROGRESS.md).
+The optional Cloud Run/Pub/Sub receiver lives in [cloud/README.md](cloud/README.md);
+cloud upload stays disabled until a deployment endpoint is configured.
 
 ## Contributing
 

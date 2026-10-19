@@ -13,6 +13,7 @@ import { cockpitFov, cockpitSeat } from './cockpit.js';
 import { createTelemetrySnapshot } from './telemetry.js';
 import { driverIdentity } from './driverIdentity.js';
 import { RaceTelemetryRecorder } from './raceTelemetry.js';
+import { createTelemetryUplink } from './telemetryUplink.js';
 
 // Photographic HDRI skies (CC0, PolyHaven). Load only the selected session's
 // theme; fetching all three at boot used 19.8 MB before the player chose a race.
@@ -74,6 +75,12 @@ function environmentKeyForTrack(trackId) {
 function documentIsActive() {
   return !document.hidden &&
     (typeof document.hasFocus !== 'function' || document.hasFocus());
+}
+
+function configuredTelemetryEndpoint() {
+  const runtime = globalThis.FORMULA_RACING_LIVE_CONFIG?.telemetryEndpoint;
+  if (typeof runtime === 'string' && runtime.trim()) return runtime.trim();
+  return document.querySelector('meta[name="formula-racing-telemetry-endpoint"]')?.content?.trim() || '';
 }
 
 function finiteCameraValue(value) {
@@ -207,6 +214,11 @@ class Game {
     this.audio = new AudioEngine();
     this.champ = new Championship();
     this.ui = new UI((action, payload) => this.onUI(action, payload));
+    this.telemetryEndpoint = configuredTelemetryEndpoint();
+    this.telemetryRecorder = null;
+    this.lastTelemetryRecorder = null;
+    this.telemetryUplink = null;
+    this.lastTelemetryUplinkStatus = null;
     this.quality = new QualityController(this.renderer, (tier, automatic) => {
       this.effects?.setQualityTier?.(tier);
       if (this.session) this.hud.message(`GRAPHICS: ${tier.toUpperCase()}${automatic ? ' · AUTO' : ''}`);
@@ -911,7 +923,14 @@ class Game {
           laps,
         },
       });
-      this.telemetryRecorder.begin(this.session);
+      this.telemetryUplink = createTelemetryUplink({ baseUrl: this.telemetryEndpoint });
+      const sessionStartedRecords = this.telemetryRecorder.begin(this.session);
+      this.telemetryUplink.enqueue(sessionStartedRecords);
+      const uplink = this.telemetryUplink;
+      void uplink.start(this.telemetryRecorder.envelope).catch((error) => {
+        console.warn('Live telemetry upload unavailable; local capture remains active', error);
+        void uplink.close().catch(() => {});
+      });
       this.applyVenueCarLighting();
       this.session.setNametags(this.ui.settings.nametags);
       this.hud.bindSession(this.session, this.circuit);
@@ -1000,6 +1019,14 @@ class Game {
       this.lastTelemetryRecorder = this.telemetryRecorder;
       void this.telemetryRecorder.flush().catch(() => {});
       this.telemetryRecorder = null;
+    }
+    if (this.telemetryUplink) {
+      const uplink = this.telemetryUplink;
+      this.lastTelemetryUplinkStatus = uplink.status();
+      void uplink.close().catch((error) => {
+        console.warn('Live telemetry upload ended with locally retained records', error);
+      });
+      this.telemetryUplink = null;
     }
     if (this.timeTrial) { this.timeTrial.dispose(); this.timeTrial = null; }
     if (this.session) { this.session.dispose(); this.session = null; }
@@ -1785,7 +1812,10 @@ class Game {
           this._trackConditionsTime = trackState.time;
         }
         s.update(dt, this.playerInput(dt));
-        this.telemetryRecorder?.step(s, dt);
+        if (this.telemetryRecorder) {
+          const records = this.telemetryRecorder.step(s, dt);
+          this.telemetryUplink?.enqueue(records);
+        }
         if (this.effects) this.effects.update(dt, s.entries, this.circuit?.trackState);
         if (this.timeTrial) this._timeTrialStatus = this.timeTrial.update(dt);
       });

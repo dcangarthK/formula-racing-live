@@ -19,4 +19,20 @@ Every record carries `schemaVersion`, `recordId`, `sessionId`, `userId`, `sequen
 
 Event records are transition based: `session_started`, `lap_completed`, `sector_completed`, `position_changed`, `pit_entered`, `pit_exited`, `penalty_changed`, `car_finished`, `car_dnf`, and `race_finished`. `race_finished` includes the official classification.
 
-No GCP credentials, endpoints, authentication tokens, or network transport are included. Persisted records are the hand-off boundary for a later authenticated uploader.
+## Live GCP transport
+
+`js/telemetryUplink.js` sends the same records to the optional service in
+`cloud/`. It is disabled when no endpoint is configured. A deployment can set
+the `formula-racing-telemetry-endpoint` meta value in `index.html`, or define
+`FORMULA_RACING_LIVE_CONFIG.telemetryEndpoint` before `main.js` loads.
+
+The client first posts the session envelope to `/v1/sessions`, receives a
+short-lived session/user-scoped bearer token, and keeps that token in memory
+only. Records are coalesced into ordered batches, retried with bounded backoff,
+and retain their stable `recordId` idempotency keys. A 401 triggers one token
+renewal for the current batch. IndexedDB remains the durable local copy if the
+network or cloud service is unavailable.
+
+No permanent credential or GCP service-account material is included in the
+browser build. See `cloud/README.md` for the Cloud Run, Pub/Sub, and Terraform
+boundary.
