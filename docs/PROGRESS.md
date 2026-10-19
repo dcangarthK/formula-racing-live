@@ -25,6 +25,9 @@
   `engineering` (player, full detail, 20 Hz), `events`, and a local-only
   `archive`; per-tier Pub/Sub topics, BigQuery landing tables, curated schema
   and merge queries under `cloud/bigquery/`.
+- [x] Scoped the Live Racing Challenge: fixed producer and deliverables, six
+  candidate architectures, measured cost/rate reference, judging rubric and the
+  validation order — `docs/challenge/gcp-racing-challenge.md`.
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
 - [x] Added player-authored teams: name, code, livery colours, driver name,
