@@ -58,10 +58,13 @@ const BUDGETS = {
   menuBootBytes: 2_300_000,
   selectedSessionCumulativeBytes: 27_000_000,
   allThemeInventoryBytes: 44_000_000,
-  moduleFiles: 55,
+  // +3 for the fork's telemetry modules: driverIdentity, raceTelemetry and
+  // telemetryUplink. They are small — every byte budget above still passes
+  // with room — but they are three more module requests per session.
+  moduleFiles: 58,
   menuBootRequests: 65,
-  selectedSessionRequests: 69,
-  allThemeInventoryRequests: 71,
+  selectedSessionRequests: 72,
+  allThemeInventoryRequests: 74,
 };
 
 function fail(message) {

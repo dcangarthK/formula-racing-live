@@ -99,7 +99,7 @@ export function serializeRaceEntry(entry = {}) {
 
 // A dashboard needs position, gap and tyre state for every car; an engineering
 // trace needs everything for one car. Streaming both at full fidelity costs
-// roughly 3 GB for a 30-minute race, so tiers project the same authoritative
+// roughly 1.9 GB for a 30-minute race, so tiers project the same authoritative
 // snapshot at the rate and width each destination actually reads.
 export const TELEMETRY_TIERS = ['live', 'engineering', 'events', 'archive'];
 export const DEFAULT_LIVE_HZ = 5;

@@ -21,3 +21,4 @@ sounds/_candidates/
 
 # Historical personal-use roster retained locally on the maintainer's machine.
 js/data-real.js
+tools/telemetry-fixture/

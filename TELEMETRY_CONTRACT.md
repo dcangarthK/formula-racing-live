@@ -69,8 +69,9 @@ sample at the same `simulationTimeSeconds`. `recordId` stays `sessionId:sequence
 from one recorder sequence across all tiers, so ordering and idempotency hold
 when a consumer interleaves them. Pass `archive: false` to stop recording the
 full snapshot locally. Only `archive` and `events` are written to the local
-store (`persistTiers`); the streamed projections are not stored again. Streaming the archive tier would cost roughly 3 GB for a
-30-minute race; the three streamed tiers cost about 100 MB.
+store (`persistTiers`); the streamed projections are not stored again. Measured on a 22-car Monza race, streaming the archive tier would cost about
+1.9 GB of compact NDJSON for a 30-minute race; the three streamed tiers cost
+about 180 MB.
 
 Rationale, field lists and the BigQuery schema: [`docs/specs/telemetry-tiers.md`](docs/specs/telemetry-tiers.md).
 

@@ -39,6 +39,6 @@ layer. It will not silently replace the upstream fictional championship.
 - Projected the 20 Hz all-car snapshot into `live` (all cars, slim, 5 Hz),
   `engineering` (player car, full detail, 20 Hz), `events` and a local-only
   `archive` tier, cutting the streamed volume for a 30-minute race from roughly
-  3 GB to about 100 MB.
+  1.9 GB to about 180 MB, measured with `tools/sim-telemetry.mjs`.
 - Routed each tier to its own Pub/Sub topic, with BigQuery landing tables,
   curated tables, merge queries and a near-live timing view.

@@ -29,7 +29,7 @@ export class TelemetryUplink {
     this.maxRetryAttempts = Math.max(1, Math.floor(options.maxRetryAttempts || 8));
     this.jitterRatio = Math.min(1, Math.max(0, options.jitterRatio ?? 0.2));
     // The archive tier is the full-fidelity all-car snapshot. It stays in
-    // IndexedDB: streaming it costs roughly 3 GB for a 30-minute race, which
+    // IndexedDB: streaming it costs roughly 1.9 GB for a 30-minute race, which
     // no dashboard or analytical table reads.
     this.tiers = new Set(Array.isArray(options.tiers) && options.tiers.length
       ? options.tiers

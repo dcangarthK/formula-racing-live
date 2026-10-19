@@ -8,7 +8,8 @@ Status: design, 2026-10-19. Supersedes the single full-fidelity stream in
 The recorder publishes one record per 20 Hz sample containing every car at full
 fidelity. A measured 9-minute single-car time trial produced 10,777 samples and
 51 MB of formatted JSON. The same recorder in a 22-car race produces roughly
-900 MB for 9 minutes and about 3 GB for a 30-minute race, because every sample
+900 MB for 9 minutes of formatted JSON — about 1.9 GB of compact NDJSON for a
+30-minute race — because every sample
 carries 22 cars with per-wheel slip, load, temperature, pressure and suspension.
 
 That volume is wrong for the destination, not just large. A spectator dashboard
@@ -30,21 +31,32 @@ is a projection of that snapshot, so no tier can disagree with another.
 
 ### Rate and field budget
 
-Per 30-minute race, formatted JSON, before Pub/Sub batching:
+Measured with `node tools/sim-telemetry.mjs monza 3` — a 22-car Monza race,
+359 s of simulation — as compact NDJSON, then extrapolated to 30 minutes:
 
-| Tier | Rows | Bytes/row | Total |
+| Tier | Rows/30 min | Bytes/row | 30-min total |
 | --- | --- | --- | --- |
-| `live` | 22 cars × 5 Hz × 1800 s = 198,000 | ~260 | ~51 MB |
-| `engineering` | 20 Hz × 1800 s = 36,000 | ~1,400 | ~50 MB |
-| `events` | ~1,500 | ~300 | ~0.5 MB |
-| archive (not streamed) | 36,000 snapshots | ~25,000 | ~900 MB |
+| `live` | 22 cars × 5 Hz × 1800 s = 198,000 | ~460 | 89 MB |
+| `engineering` | 20 Hz × 1800 s = 36,000 | ~2,700 | 92 MB |
+| `events` | ~3,400 | ~390 | 1.3 MB |
+| archive (not streamed) | 36,000 snapshots | ~52,000 | 1,888 MB |
 
-About 100 MB reaches GCP for a full race, against roughly 3 GB today. The
-archive stays local unless the driver opts in, and uploads once, compressed,
-after the session rather than during it.
+About 180 MB reaches GCP for a full race, against 1,888 MB if the archive
+snapshot were streamed as it was before tiering — roughly 3 GB in the formatted
+JSON the first time trial was exported as. The archive stays local unless the
+driver opts in, and uploads once, compressed, after the session.
 
-`live` at 10 Hz doubles its tier to about 100 MB. 5 Hz is the default because a
+The first version of this table estimated 51 MB, 50 MB and 0.5 MB from field
+counts. The measurement is about 1.8× higher: a live car row is ~460 bytes
+rather than ~260, because JSON key names dominate a row of short numbers.
+
+`live` at 10 Hz doubles its tier to about 178 MB. 5 Hz is the default because a
 timing tower updates visibly at 5 Hz and gap interpolation covers the rest.
+
+`live` is now the largest streamed tier, and most of its bytes are repeated key
+names and per-car identity that never change within a session. If the cost
+matters later, the lever is a per-session roster in `session_started` plus
+positional car rows, not a lower rate.
 
 ### `live` fields
 
@@ -70,7 +82,13 @@ pressure, suspension deflection and contact.
 
 ### `events`
 
-Unchanged from `TELEMETRY_CONTRACT.md`, including `session_ended`. Events are
+Unchanged from `TELEMETRY_CONTRACT.md`, including `session_ended`. A measured
+3-lap race produced 687 events: 399 `position_changed`, 193 `sector_completed`,
+64 `lap_completed`, 4 `pit_entered`/`pit_exited` pairs, 20 `car_finished`, one
+`race_finished` and one `session_ended`. `car_finished` counts only the cars
+that crossed the line before the session ended, so it can be fewer than the
+grid; the 22-row classification comes from `race_finished`, which is what
+`results` is built from. Events are
 the only tier that must never be sampled, dropped or down-rated: they are the
 transitions a dashboard and a classification are built from.
 
