@@ -1,21 +1,25 @@
-# APEX FORMULA 2026
+# Formula Racing Live
+
+Formula Racing Live is a telemetry-focused fork of
+[APEX FORMULA 2026](https://github.com/ahacker-1/apex-formula-2026). The initial
+fork preserves the upstream simulation, fictional championship, teams, tracks,
+physics and presentation while adding race identity and real-time telemetry.
+See [`MODIFICATIONS.md`](MODIFICATIONS.md) for the maintained scope boundary.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-## Play it now
-
-**[Play APEX FORMULA 2026 in your browser](https://apex-formula-2026.vercel.app)**
-
-No download or installation is required.
+No download or installation is required once the static site is served.
 
 An original open-wheel racing simulator built with Three.js. It runs in a web
 browser with no build step, no CDN, and no runtime network dependency.
 
-APEX FORMULA 2026 includes a fictional 11-team, 22-driver championship and 24
+Formula Racing Live includes the upstream fictional 11-team, 22-driver championship and 24
 race weekends. Team names, driver names, liveries, engine marques, sponsors,
 and visible venue branding are original to this project.
 
-Presented by [The AI Consulting Network](https://theaiconsultingnetwork.com).
+The underlying game was created by the APEX FORMULA 2026 contributors. Required
+copyright and third-party attributions remain in [`NOTICE`](NOTICE) and
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 > This is an independent, unofficial project. It is not affiliated with,
 > endorsed by, or sponsored by Formula 1, the FIA, or any real-world racing
@@ -28,8 +32,8 @@ The game uses browser ES modules, so serve it over HTTP rather than opening
 `index.html` directly:
 
 ```bash
-git clone https://github.com/ahacker-1/apex-formula-2026.git
-cd apex-formula-2026
+git clone <your-formula-racing-live-fork-url>
+cd formula-racing-live
 python3 -m http.server 8341
 ```
 

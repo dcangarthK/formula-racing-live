@@ -114,7 +114,7 @@ export class HUD {
       </div>
       <div id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" aria-hidden="true">
         <div class="onboarding-card">
-          <span class="eyebrow">WELCOME TO APEX FORMULA</span>
+          <span class="eyebrow">WELCOME TO FORMULA RACING</span>
           <h2 id="onboarding-title">THREE THINGS BEFORE LIGHTS OUT</h2>
           <div class="onboarding-grid">
             <div><b>1 · DRIVE</b><span><kbd>↑</kbd> throttle, <kbd>↓</kbd> brake/reverse, <kbd>←</kbd><kbd>→</kbd> steer.</span></div>

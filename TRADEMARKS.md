@@ -1,5 +1,9 @@
 # Trademarks and project identity
 
+Formula Racing Live is the working identity of this modified distribution.
+It does not claim rights in the APEX FORMULA 2026 name or imply endorsement by
+the upstream project.
+
 The Apache License 2.0 applies to copyright and patent rights described in the
 license. It does not grant permission to use project names, logos, service
 marks, or third-party trademarks except as necessary to describe origin and

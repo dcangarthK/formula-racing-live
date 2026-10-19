@@ -1,4 +1,4 @@
-# Contributing to APEX FORMULA 2026
+# Contributing to FORMULA RACING LIVE
 
 Thanks for helping improve the simulator. Bug fixes, performance work,
 accessibility improvements, tests, documentation, and original gameplay ideas

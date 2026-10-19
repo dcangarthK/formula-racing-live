@@ -866,7 +866,7 @@ async function captureVenueRun(page, venue, runNumber, preFreezeTicks) {
   const errors = observeErrors(page);
   await configureFreshPage(page);
   await page.goto(`/?seed=${encodeURIComponent(venue.seed)}`);
-  await expect(page).toHaveTitle(/APEX FORMULA 2026/);
+  await expect(page).toHaveTitle(/FORMULA RACING LIVE/);
   await expect(page.getByRole('button', { name: /QUICK RACE/ })).toBeVisible();
   expect(await hdrResourcePaths(page), 'HDR must remain lazy at the main menu').toEqual([]);
 
@@ -1264,7 +1264,7 @@ test('night run-off, barriers, and hoardings respond to the venue light pools', 
   test.setTimeout(180_000);
   await configureFreshPage(page);
   await page.goto('/');
-  await expect(page).toHaveTitle(/APEX FORMULA 2026/);
+  await expect(page).toHaveTitle(/FORMULA RACING LIVE/);
   const rows = await measureNightSurfaceResponse(page);
   console.log(`[night-surface-response] ${JSON.stringify(rows)}`);
   for (const [trackId, row] of Object.entries(rows)) {
@@ -1285,7 +1285,7 @@ test('each night and dusk venue applies its pinned lighting look and sky contrac
     try {
       await configureFreshPage(runPage);
       await runPage.goto(`/?seed=lighting-contract-${trackId}`);
-      await expect(runPage).toHaveTitle(/APEX FORMULA 2026/);
+      await expect(runPage).toHaveTitle(/FORMULA RACING LIVE/);
       await chooseQuickRace(runPage, trackId);
       await runPage.waitForFunction(() => window.__game?._envIsHDRI === true,
         null, { timeout: 35_000, polling: 50 });

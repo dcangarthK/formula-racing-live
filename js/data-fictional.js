@@ -1,4 +1,4 @@
-// APEX FORMULA 2026 — original (fictional) roster. This is the PUBLIC default.
+// FORMULA RACING LIVE — original (fictional) roster. This is the PUBLIC default.
 //
 // Everything in this file is invented: teams, liveries, engine marques, drivers,
 // event names and circuit names. Nothing here references, resembles or is derived

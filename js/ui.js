@@ -45,7 +45,8 @@ const ENGINE_GLYPH = (() => {
 const TACN_URL = 'THEAICONSULTINGNETWORK.COM';
 const TACN_FOOTER = `<span class="tacn-mark">PRESENTED BY THE AI CONSULTING NETWORK — ${TACN_URL}</span>`;
 
-// Venue label: each APEX calendar round carries an invented `circuitName`.
+// Modified for Formula Racing Live branding; original copyright is retained in NOTICE.
+// Venue label: each calendar round carries an invented `circuitName`.
 function circuitLabel(race, track) {
   return (race && race.circuitName) || (track && track.name) || '';
 }
@@ -266,7 +267,7 @@ export class UI {
         <span class="key-hint"><b>P</b> box</span>
         <span class="key-hint"><b>C</b> camera</span>
         <span class="key-hint"><b>ESC</b> pause</span>
-        <span class="footer-brand">APEX FORMULA ${SEASON} — an original racing simulation</span>
+        <span class="footer-brand">FORMULA RACING LIVE ${SEASON} — an original racing simulation</span>
         ${TACN_FOOTER}
       </div>`;
     el.querySelectorAll('.nav-item').forEach(n =>
@@ -781,7 +782,7 @@ function tacnCard() {
 }
 
 function header(title) {
-  return `<div class="menu-header"><div class="brand">APEX<em>FORMULA</em> ${SEASON}</div><div class="title">${title}</div></div>`;
+  return `<div class="menu-header"><div class="brand">FORMULA<em>RACING LIVE</em> ${SEASON}</div><div class="title">${title}</div></div>`;
 }
 function hex(n) { return '#' + n.toString(16).padStart(6, '0'); }
 function champName(ds) {

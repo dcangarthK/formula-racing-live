@@ -62,7 +62,7 @@ export class TimeTrialManager {
     } : null);
     if (!source) return null;
     return {
-      format: 'apex-formula-ghost',
+      format: 'formula-racing-live-ghost',
       version: 1,
       sampleHz: Math.round(1 / SAMPLE_INTERVAL),
       seed: Number.isInteger(this.session?.seed) ? this.session.seed : null,
@@ -79,7 +79,7 @@ export class TimeTrialManager {
   downloadReplay() {
     const data = this.exportData();
     if (!data) return false;
-    return downloadTelemetry(`apex-${this.trackId}-${this.driverId}-ghost.json`, data);
+    return downloadTelemetry(`formula-racing-live-${this.trackId}-${this.driverId}-ghost.json`, data);
   }
 
   _progress(phys) {

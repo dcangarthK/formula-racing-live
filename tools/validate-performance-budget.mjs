@@ -395,7 +395,7 @@ function main() {
   actual.deferredUntilSelectionBytes = actual.selectedSessionCumulativeBytes - actual.menuBootBytes;
   actual.avoidedAfterSelectionBytes = actual.allThemeHdrBytes - actual.oneThemeHdrBytes;
 
-  console.log('APEX FORMULA PERFORMANCE / ASSET BUDGET');
+  console.log('FORMULA RACING PERFORMANCE / ASSET BUDGET');
   console.log('Raw source bytes; deterministic and independent of CDN compression.\n');
   console.log('COMPONENT INVENTORY');
   console.log(`${pad('Type', 28)} ${pad('Files/req', 9)} ${pad('Actual', 25)} Ceiling`);

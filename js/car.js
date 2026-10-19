@@ -413,7 +413,7 @@ function rearIdentityTex(team, drv) {
       g.fillText('TACN', 58, 68);
       g.fillStyle = 'rgba(215,237,244,0.76)';
       g.font = '800 27px Arial';
-      g.fillText(`${code || 'AVI'}  //  APEX FORMULA`, 62, 124);
+      g.fillText(`${code || 'AVI'}  //  FORMULA RACING`, 62, 124);
       g.textAlign = 'center';
       g.fillStyle = '#0d1728';
       g.font = 'italic 900 72px Arial';
@@ -449,7 +449,7 @@ function rearIdentityTex(team, drv) {
     g.fillText(teamName, 62, 72, 500);
     g.fillStyle = 'rgba(255,255,255,0.68)';
     g.font = '800 24px Arial';
-    g.fillText(code ? `${code}  //  APEX FORMULA` : 'APEX FORMULA', 64, 122);
+    g.fillText(code ? `${code}  //  FORMULA RACING` : 'FORMULA RACING', 64, 122);
     g.textAlign = 'right';
     g.fillStyle = luminance(accent) > 0.42 ? '#0a0c10' : '#ffffff';
     g.font = 'italic 900 118px Arial';

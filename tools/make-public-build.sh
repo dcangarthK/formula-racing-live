@@ -92,7 +92,7 @@ rm -rf "$output_dir"
 mkdir -p "$output_dir"
 
 # runtime files only
-cp index.html README.md LICENSE NOTICE THIRD_PARTY_NOTICES.md "$output_dir/"
+cp index.html README.md LICENSE NOTICE MODIFICATIONS.md TRADEMARKS.md THIRD_PARTY_NOTICES.md "$output_dir/"
 cp -R css js lib assets textures LICENSES "$output_dir/"
 rm -f "$output_dir/js/data-real.js"
 mkdir -p "$output_dir/sounds"

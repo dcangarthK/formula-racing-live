@@ -1477,7 +1477,7 @@ export function buildCircuit(trackId, def, scene, options = {}) {
   // s.n is UP x t, i.e. the track's LEFT normal, so roadDecalQuat's local +x -- the
   // direction the texture's u axis runs -- points at the driver's LEFT. A driver
   // approaching the decal has screen-right = t x UP = -n, so text laid out with
-  // roadDecalQuat comes out rotated 180 degrees: the painted 'APEX FORMULA 2026'
+  // roadDecalQuat comes out rotated 180 degrees: the painted 'FORMULA RACING LIVE'
   // wordmark on the main straight read backwards from the car, which is exactly
   // what the user reported. Rotating about the road-up axis puts local +x on -n
   // (driver-right) and local +y on +t (up-screen), so the glyphs read correctly.
@@ -2775,7 +2775,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
   // sequence so the validator can hold that invariant.
   {
     const BANNER_BRANDS = [
-      ['APEX FORMULA 2026', '#15151e', '#ffffff'],
+      ['FORMULA RACING LIVE', '#15151e', '#ffffff'],
       ['VELOCE FUELS', '#d40a06', '#ffffff'],
       ['ION TYRES', '#eceef1', '#12141b'],
       ['QUANTUM AERO', '#0b3a6d', '#ffffff'],
@@ -2814,7 +2814,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
   {
     const s0 = samples[0];
     const postMat = std({ color: 0x4b4e57, roughness: 0.6 });
-    const beamTex = ctex(draw(TEX.sponsorBanner, ['APEX FORMULA', '#0b0b0d', '#e10600', 1024, 128], '#0b0b0d'));
+    const beamTex = ctex(draw(TEX.sponsorBanner, ['FORMULA RACING', '#0b0b0d', '#e10600', 1024, 128], '#0b0b0d'));
     const w = wallOff * 2 + 2;
     const gantry = new THREE.Group();
     gantry.name = 'gantry';
@@ -3140,7 +3140,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
       // is now authored ABOVE hoarding density (4096px / 23.8m = 172 px/m) with
       // the same anisotropic filtering the hoardings get.
       const bannerTex = ctex(draw(TEX.sponsorBanner,
-        ['PIT LANE - APEX FORMULA 2026', '#0d0d12', '#e6e6ea', 4096, 256], '#0d0d12'),
+        ['PIT LANE - FORMULA RACING LIVE', '#0d0d12', '#e6e6ea', 4096, 256], '#0d0d12'),
         { repeat: [5, 1], aniso: 16 });
       const banner = new THREE.Mesh(new THREE.PlaneGeometry(PIT_LEN - 1, 2.4),
         flatLit(bannerTex, K_BOARD, { roughness: 0.55 }));
@@ -3435,7 +3435,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
         g.fillStyle = '#ffffff';
         g.font = `italic 900 ${Math.round(H * 0.085)}px "Arial Black", Arial, sans-serif`;
         g.textAlign = 'left'; g.textBaseline = 'middle';
-        g.fillText('APEX FORMULA 2026', W * 0.025, H * 0.072);
+        g.fillText('FORMULA RACING LIVE', W * 0.025, H * 0.072);
         g.fillRect(W * 0.845, H * 0.03, W * 0.13, H * 0.08);
         g.fillStyle = '#d40a06';
         g.font = `900 ${Math.round(H * 0.06)}px "Arial Black", Arial, sans-serif`;
@@ -3483,7 +3483,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
         g.fillText('DRS ENABLED', W * 0.775, H * 0.70);
         g.fillStyle = 'rgba(255,255,255,0.85)';
         g.font = `italic 900 ${Math.round(H * 0.055)}px "Arial Black", Arial, sans-serif`;
-        g.fillText('APEX FORMULA', W * 0.775, H * 0.88);
+        g.fillText('FORMULA RACING', W * 0.775, H * 0.88);
         // LED pixel grid: subtle dark lattice so the surface reads as a screen
         g.fillStyle = 'rgba(6,12,26,0.13)';
         for (let x = 0; x < W; x += 4) g.fillRect(x, 0, 1, H);
@@ -3688,7 +3688,7 @@ float apexGroundNoise(vec2 worldXZ, float wavelength, float seed) {
   // ---- 7d. painted wordmark on the main straight surface -------------------
   {
     const paintTex = ctex(draw(TEX.sponsorBanner,
-      ['APEX FORMULA 2026', '#0b0b10', '#ffffff', 1024, 128], '#0b0b10'),
+      ['FORMULA RACING LIVE', '#0b0b10', '#ffffff', 1024, 128], '#0b0b10'),
       { wrapS: THREE.ClampToEdgeWrapping, wrapT: THREE.ClampToEdgeWrapping, aniso: 4 });
     // crop the banner's border strokes out of the mask, or the paint reads as a
     // framed box rather than a wordmark sprayed on the asphalt

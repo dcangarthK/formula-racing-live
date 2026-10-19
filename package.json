@@ -1,14 +1,10 @@
 {
-  "name": "apex-formula-2026",
+  "name": "formula-racing-live",
   "version": "0.1.0",
   "private": true,
-  "description": "An original browser-based open-wheel racing simulator.",
+  "description": "An open-wheel racing simulator with live race telemetry.",
   "type": "module",
   "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ahacker-1/apex-formula-2026.git"
-  },
   "engines": {
     "node": ">=24"
   },

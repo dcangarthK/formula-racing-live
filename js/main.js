@@ -1,4 +1,4 @@
-// APEX FORMULA 2026 — boot, renderer, cameras, input, and the game state machine.
+// FORMULA RACING LIVE — boot, renderer, cameras, input, and the game state machine.
 import * as THREE from 'three';
 import { EffectComposer } from '../lib/postprocessing/EffectComposer.js';
 import { RenderPass } from '../lib/postprocessing/RenderPass.js';
