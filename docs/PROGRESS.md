@@ -25,9 +25,11 @@
   `engineering` (player, full detail, 20 Hz), `events`, and a local-only
   `archive`; per-tier Pub/Sub topics, BigQuery landing tables, curated schema
   and merge queries under `cloud/bigquery/`.
-- [x] Scoped the Live Racing Challenge: fixed producer and deliverables, six
-  candidate architectures, measured cost/rate reference, judging rubric and the
-  validation order — `docs/challenge/gcp-racing-challenge.md`.
+- [x] Scoped the Live Racing Side Quest: a skills programme that ships the demo
+  from the DPE strategy doc — fixed producer, provided dashboards behind a
+  pluggable contract, six candidate architectures, measured cost reference, four
+  sprints and the validation order — `docs/challenge/gcp-racing-challenge.md`.
+- [ ] Build the two dashboards and the data contract they read.
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
 - [x] Added player-authored teams: name, code, livery colours, driver name,
