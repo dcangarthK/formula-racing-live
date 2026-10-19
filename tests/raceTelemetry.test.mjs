@@ -6,6 +6,10 @@ import {
   RaceTelemetryRecorder,
   createTelemetryStore,
   normalizeSessionType,
+  parseGapSeconds,
+  serializeLiveSession,
+  TELEMETRY_TIERS,
+  serializePlayerEngineering,
   selectSessionsToPrune,
   serializeRaceSession,
 } from '../js/raceTelemetry.js';
@@ -60,10 +64,12 @@ test('samples at 20 Hz from caller-provided dt without dropping scheduled sample
   const capture = recorder();
   capture.begin(state);
   assert.equal(capture.step(state, 0.049).filter(r => r.type === 'telemetry').length, 0);
-  assert.equal(capture.step(state, 0.101).filter(r => r.type === 'telemetry').length, 3);
+  // Each scheduled sample projects the archive tier; live and engineering are
+  // projections of that same instant, so the archive tier carries the cadence.
+  assert.equal(capture.step(state, 0.101).filter(r => r.tier === 'archive').length, 3);
   await capture.flush();
   const records = await capture.records();
-  assert.deepEqual(records.filter(r => r.type === 'telemetry').map(r => r.simulationTimeSeconds), [0.05, 0.1, 0.15000000000000002]);
+  assert.deepEqual(records.filter(r => r.tier === 'archive').map(r => r.simulationTimeSeconds), [0.05, 0.1, 0.15000000000000002]);
 });
 
 test('detects all required race state transitions once', async () => {
@@ -119,7 +125,11 @@ test('persists records and exports valid JSON and NDJSON with identity envelope'
   const json = JSON.parse(await capture.exportJSON());
   assert.equal(json.session.user.id, 'user-1');
   assert.equal(json.session.sessionId, 'session-1');
+  // Only the durable tiers are stored: live and engineering are streamed
+  // projections of the archive snapshot, so storing them would triple the
+  // local copy of the same simulation.
   assert.equal(json.records.length, 2);
+  assert.deepEqual(json.records.map(record => record.tier), ['events', 'archive']);
 
   const lines = (await capture.exportNDJSON()).trim().split('\n').map(JSON.parse);
   assert.equal(lines[0].type, 'session');
@@ -196,7 +206,8 @@ test('ends the session once with a reason and the laps actually completed', asyn
   await capture.flush();
   const records = await capture.records();
   assert.equal(records.filter(record => record.event === 'session_ended').length, 1);
-  assert.equal(records.at(-1).sequence, records.length - 1);
+  assert.equal(records.at(-1).event, 'session_ended');
+  assert.ok(records.every((record, index) => index === 0 || record.sequence > records[index - 1].sequence));
 });
 
 test('classifies the session end when the race produced results', () => {
@@ -220,7 +231,7 @@ test('keeps no in-memory duplicate while IndexedDB is healthy', async () => {
   await capture.flush();
 
   assert.equal(shadow.records.length, 0);
-  assert.equal(persisted.records.length, 2);
+  assert.deepEqual(persisted.records.map(record => record.tier), ['events', 'archive']);
   assert.equal((await capture.records()).length, 2);
 });
 
@@ -247,7 +258,7 @@ test('merges records persisted before an IndexedDB failure with the memory fallb
 
   const records = await capture.records();
   assert.equal(store.primaryFailed, true);
-  assert.deepEqual(records.map(record => record.sequence), [0, 1, 2]);
+  assert.deepEqual(records.map(record => record.sequence), [0, 3, 5]);
 });
 
 test('retains only the newest sessions and never the one being recorded', () => {
@@ -261,4 +272,72 @@ test('retains only the newest sessions and never the one being recorded', () => 
   assert.deepEqual(selectSessionsToPrune(sessions, 3, 'oldest'), ['older']);
   assert.deepEqual(selectSessionsToPrune(sessions, 1, 'oldest'), ['newest', 'recent', 'older']);
   assert.deepEqual(selectSessionsToPrune([], 3, 'only'), []);
+});
+
+test('projects a slim all-car live tier with numeric gaps', () => {
+  const state = session();
+  state.entries[0].gapText = 'LEADER';
+  state.entries[0].intervalText = '';
+  state.entries[1].gapText = '+12.4';
+  state.entries[1].intervalText = '+12.4';
+  const live = serializeLiveSession(state);
+
+  assert.equal(live.cars.length, 2);
+  assert.deepEqual(live.cars[1], {
+    driverId: 'two', teamId: 'team-two', isPlayer: false, position: 2, lap: 0,
+    trackSampleIndex: 20, positionXM: 2, positionZM: 10, speedKph: 180,
+    gapToLeaderSeconds: 12.4, lapsDown: 0, intervalSeconds: 12.4,
+    lastLapSeconds: 0, bestLapSeconds: 0, tyreCompound: 'M', tyreWearFraction: 0.1,
+    pitState: null, pitStops: 0, penaltySeconds: 0, finished: false, dnf: false,
+  });
+  assert.equal(live.cars[0].gapToLeaderSeconds, 0);
+  assert.ok(!('wheels' in live.cars[0]), 'live tier must not carry per-wheel detail');
+
+  assert.deepEqual(parseGapSeconds('PIT'), { seconds: null, laps: null });
+  assert.deepEqual(parseGapSeconds('+2L'), { seconds: null, laps: 2 });
+  assert.deepEqual(parseGapSeconds(''), { seconds: 0, laps: 0 });
+});
+
+test('projects the engineering tier for the player car only', () => {
+  const engineering = serializePlayerEngineering(session());
+  assert.equal(engineering.driverId, 'one');
+  assert.equal(engineering.car.wheels[0].key, 'FL');
+  assert.equal(engineering.car.speedKph, 180);
+  assert.ok(!('cars' in engineering));
+  assert.equal(serializePlayerEngineering({ entries: [] }), null);
+});
+
+test('emits live at 5 Hz, engineering and archive at 20 Hz, phase-locked', async () => {
+  const state = session();
+  const capture = recorder();
+  capture.begin(state);
+  const samples = capture.step(state, 0.4).filter(record => record.type === 'telemetry');
+
+  const byTier = tier => samples.filter(record => record.tier === tier);
+  assert.equal(byTier('engineering').length, 8);
+  assert.equal(byTier('archive').length, 8);
+  assert.deepEqual(byTier('live').map(record => Number(record.simulationTimeSeconds.toFixed(2))), [0.05, 0.25]);
+  // A live sample is always also an engineering sample at the same instant.
+  for (const record of byTier('live')) {
+    assert.ok(byTier('engineering').some(other => other.simulationTimeSeconds === record.simulationTimeSeconds));
+  }
+  assert.ok(samples.every(record => TELEMETRY_TIERS.includes(record.tier)));
+  await capture.flush();
+});
+
+test('tags events with the events tier and honours a configured live rate', () => {
+  const state = session();
+  const capture = new RaceTelemetryRecorder({
+    sessionId: 'session-1', userId: 'user-1', store: new MemoryTelemetryStore(),
+    liveHz: 10, archive: false,
+  });
+  const started = capture.begin(state);
+  assert.equal(started[0].tier, 'events');
+
+  const samples = capture.step(state, 0.2).filter(record => record.type === 'telemetry');
+  assert.equal(samples.filter(record => record.tier === 'live').length, 2);
+  assert.equal(samples.filter(record => record.tier === 'archive').length, 0);
+  assert.throws(() => new RaceTelemetryRecorder({
+    sessionId: 's', userId: 'u', liveHz: 40, store: new MemoryTelemetryStore(),
+  }), /liveHz/);
 });

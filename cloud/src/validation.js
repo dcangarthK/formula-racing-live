@@ -1,5 +1,7 @@
 export const SCHEMA_VERSION = 'formula-racing-live.telemetry.v1';
 export const SESSION_TYPES = ['race', 'qualifying', 'time_trial'];
+// The archive tier is never streamed; it stays in the browser's local store.
+export const STREAMED_TIERS = ['live', 'engineering', 'events'];
 
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const EVENT_PATTERN = /^[a-z][a-z0-9_]{0,63}$/;
@@ -54,7 +56,18 @@ function validateRecord(record, index, sessionId, userId) {
   if (record.type !== 'telemetry' && record.type !== 'event') invalid('type must be telemetry or event', `${prefix}.type`);
   if (!finite(record.simulationTimeSeconds) || record.simulationTimeSeconds < 0) invalid('invalid simulationTimeSeconds', `${prefix}.simulationTimeSeconds`);
   if (!finite(record.raceTimeSeconds)) invalid('invalid raceTimeSeconds', `${prefix}.raceTimeSeconds`);
-  if (record.type === 'telemetry' && !Array.isArray(record.cars)) invalid('telemetry record requires cars', `${prefix}.cars`);
+  if (record.tier !== undefined && !STREAMED_TIERS.includes(record.tier)) {
+    invalid(`tier must be one of ${STREAMED_TIERS.join(', ')}`, `${prefix}.tier`);
+  }
+  // The engineering tier carries one car in full detail; live and archive carry
+  // every car. A telemetry record must match the shape its tier declares.
+  if (record.type === 'telemetry') {
+    if (record.tier === 'engineering') {
+      if (!isObject(record.car)) invalid('engineering telemetry requires car', `${prefix}.car`);
+    } else if (!Array.isArray(record.cars)) {
+      invalid('telemetry record requires cars', `${prefix}.cars`);
+    }
+  }
   if (record.type === 'event' && (typeof record.event !== 'string' || !EVENT_PATTERN.test(record.event))) {
     invalid('event record requires a valid event name', `${prefix}.event`);
   }

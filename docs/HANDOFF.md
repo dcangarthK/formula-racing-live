@@ -42,6 +42,13 @@ npx playwright test tests/browser/game.spec.mjs \
   --project=desktop-chromium
 ```
 
+Tiering is implemented end to end in code: `js/raceTelemetry.js` projects the
+tiers, `js/telemetryUplink.js` streams all but `archive`, `cloud/src` validates
+and routes per tier, `cloud/terraform/tiers.tf` creates the topics, BigQuery
+dataset, landing tables and subscriptions, and `cloud/bigquery/*.sql` holds the
+curated schema, the 5-minute merge queries and the near-live timing view.
+Nothing has been applied to a GCP project.
+
 ## Next slice: authorized deployment
 
 Follow `cloud/README.md` to build the image, bootstrap the Secret Manager

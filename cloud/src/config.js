@@ -8,6 +8,11 @@ export function loadConfig(env = process.env) {
     port: integer(env.PORT, 8080, 1, 65535),
     projectId: env.GCP_PROJECT_ID || env.GOOGLE_CLOUD_PROJECT || '',
     topic: env.PUBSUB_TOPIC || 'formula-racing-live-telemetry',
+    topics: {
+      live: env.PUBSUB_TOPIC_LIVE || `${env.PUBSUB_TOPIC || 'formula-racing-live-telemetry'}-live`,
+      engineering: env.PUBSUB_TOPIC_ENGINEERING || `${env.PUBSUB_TOPIC || 'formula-racing-live-telemetry'}-engineering`,
+      events: env.PUBSUB_TOPIC_EVENTS || `${env.PUBSUB_TOPIC || 'formula-racing-live-telemetry'}-events`,
+    },
     tokenSecret: env.TELEMETRY_TOKEN_SECRET || '',
     tokenTtlSeconds: integer(env.TELEMETRY_TOKEN_TTL_SECONDS, 900, 60, 3600),
     allowedOrigins: new Set((env.TELEMETRY_ALLOWED_ORIGINS || '')

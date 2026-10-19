@@ -97,6 +97,86 @@ export function serializeRaceEntry(entry = {}) {
   };
 }
 
+// A dashboard needs position, gap and tyre state for every car; an engineering
+// trace needs everything for one car. Streaming both at full fidelity costs
+// roughly 3 GB for a 30-minute race, so tiers project the same authoritative
+// snapshot at the rate and width each destination actually reads.
+export const TELEMETRY_TIERS = ['live', 'engineering', 'events', 'archive'];
+export const DEFAULT_LIVE_HZ = 5;
+
+// The timing tower reports gaps as display strings. Parse them back into the
+// seconds a query can aggregate, keeping the lapped case distinguishable from
+// a car with no measurable gap.
+export function parseGapSeconds(value) {
+  const raw = text(value).trim();
+  if (!raw || raw === 'LEADER') return { seconds: 0, laps: 0 };
+  if (raw === 'PIT') return { seconds: null, laps: null };
+  const lapped = /^\+(\d+)L$/.exec(raw);
+  if (lapped) return { seconds: null, laps: Number(lapped[1]) };
+  const seconds = Number.parseFloat(raw.replace('+', ''));
+  return { seconds: Number.isFinite(seconds) ? seconds : null, laps: 0 };
+}
+
+export function serializeLiveEntry(entry = {}) {
+  const physics = entry.phys || {};
+  const gap = parseGapSeconds(entry.gapText);
+  const interval = parseGapSeconds(entry.intervalText);
+  return {
+    driverId: text(entry.driver?.id),
+    teamId: text(entry.team?.id || entry.driver?.team),
+    isPlayer: !!entry.isPlayer,
+    position: finite(entry.position),
+    lap: finite(entry.lap, -1),
+    trackSampleIndex: finite(physics.sampleIdx),
+    positionXM: finite(physics.pos?.x),
+    positionZM: finite(physics.pos?.z),
+    speedKph: finite(physics.kmh, Math.max(0, finite(physics.v)) * 3.6),
+    gapToLeaderSeconds: gap.seconds,
+    lapsDown: gap.laps,
+    intervalSeconds: interval.seconds,
+    lastLapSeconds: finite(entry.lastLap),
+    bestLapSeconds: finite(entry.bestLap),
+    tyreCompound: text(physics.compound, 'M'),
+    tyreWearFraction: finite(physics.wear),
+    pitState: entry.pitState ? text(entry.pitState.phase, 'active') : null,
+    pitStops: finite(entry.pitStops),
+    penaltySeconds: finite(entry.penaltySeconds),
+    finished: !!entry.finished,
+    dnf: !!entry.dnf,
+  };
+}
+
+export function serializeLiveSession(session = {}) {
+  return {
+    phase: text(session.phase),
+    circuitId: text(session.circuit?.id || session.circuit?.key),
+    conditions: {
+      wetness: finite(session.conditions?.wetness),
+      trackGrip: finite(session.conditions?.trackGrip, 1),
+    },
+    raceControl: {
+      state: text(session.raceControl?.state, 'green'),
+      noOvertake: !!session.raceControl?.noOvertake,
+    },
+    cars: Array.isArray(session.entries) ? session.entries.map(serializeLiveEntry) : [],
+  };
+}
+
+export function serializePlayerEngineering(session = {}) {
+  const entries = Array.isArray(session.entries) ? session.entries : [];
+  const player = entries.find(entry => entry.isPlayer) || entries[0];
+  if (!player) return null;
+  const serialized = serializeRaceEntry(player);
+  return {
+    phase: text(session.phase),
+    circuitId: text(session.circuit?.id || session.circuit?.key),
+    driverId: serialized.driver.id,
+    teamId: serialized.team.id,
+    race: serialized.race,
+    car: serialized.car,
+  };
+}
+
 export function serializeRaceSession(session = {}) {
   return {
     mode: text(session.mode, 'race'),
@@ -371,6 +451,21 @@ export class RaceTelemetryRecorder {
     this.sampleHz = finite(options.sampleHz, 20);
     if (this.sampleHz <= 0 || this.sampleHz > 100) throw new RangeError('sampleHz must be between 0 and 100');
     this.samplePeriod = 1 / this.sampleHz;
+    this.liveHz = finite(options.liveHz, DEFAULT_LIVE_HZ);
+    if (this.liveHz <= 0 || this.liveHz > this.sampleHz) {
+      throw new RangeError('liveHz must be between 0 and sampleHz');
+    }
+    // Deriving the divisor from the sample rate keeps the tiers phase-locked:
+    // every live sample is also an engineering and archive sample.
+    this.liveDivisor = Math.max(1, Math.round(this.sampleHz / this.liveHz));
+    this.archive = options.archive !== false;
+    // `live` and `engineering` are projections of the archive snapshot and are
+    // streamed, so persisting them locally would store the same simulation
+    // three times. The local copy keeps the full snapshot and the events.
+    this.persistTiers = new Set(Array.isArray(options.persistTiers) && options.persistTiers.length
+      ? options.persistTiers
+      : (this.archive ? ['archive', 'events'] : TELEMETRY_TIERS));
+    this.sampleIndex = 0;
     this.store = options.store || createTelemetryStore(options.storage);
     void this.store.registerSession?.(this.envelope);
     this.sequence = 0;
@@ -407,7 +502,7 @@ export class RaceTelemetryRecorder {
     // Caller-provided simulation time controls cadence. A large dt may produce
     // more than one scheduled sample; each record is retained in sequence.
     while (this.elapsed + 1e-9 >= this.nextSampleAt) {
-      records.push(this._record('telemetry', session, serializeRaceSession(session), this.nextSampleAt));
+      records.push(...this._sampleTiers(session, this.nextSampleAt));
       this.nextSampleAt += this.samplePeriod;
     }
     const newRecords = records.filter(record => record.event !== 'session_started');
@@ -440,6 +535,23 @@ export class RaceTelemetryRecorder {
     });
     this._persist([record]);
     return [record];
+  }
+
+  // One authoritative snapshot, projected into the tiers due at this sample.
+  _sampleTiers(session, sampleTime) {
+    const records = [];
+    const index = this.sampleIndex++;
+    if (index % this.liveDivisor === 0) {
+      records.push(this._record('telemetry', session, serializeLiveSession(session), sampleTime, 'live'));
+    }
+    const engineering = serializePlayerEngineering(session);
+    if (engineering) {
+      records.push(this._record('telemetry', session, engineering, sampleTime, 'engineering'));
+    }
+    if (this.archive) {
+      records.push(this._record('telemetry', session, serializeRaceSession(session), sampleTime, 'archive'));
+    }
+    return records;
   }
 
   _prime(session) {
@@ -561,9 +673,10 @@ export class RaceTelemetryRecorder {
     return this._record('event', session, { event, ...data });
   }
 
-  _record(type, session, payload, sampleTime = this.elapsed) {
+  _record(type, session, payload, sampleTime = this.elapsed, tier = 'events') {
     const sequence = this.sequence++;
     return {
+      tier,
       schemaVersion: TELEMETRY_SCHEMA_VERSION,
       recordId: `${this.envelope.sessionId}:${sequence}`,
       sessionId: this.envelope.sessionId,
@@ -578,9 +691,10 @@ export class RaceTelemetryRecorder {
   }
 
   _persist(records) {
-    if (!records.length) return;
+    const durable = records.filter(record => this.persistTiers.has(record.tier));
+    if (!durable.length) return;
     this.persistence = this.persistence
-      .then(() => this.store.appendBatch(records))
+      .then(() => this.store.appendBatch(durable))
       .catch((error) => { this.persistenceError = error; });
   }
 

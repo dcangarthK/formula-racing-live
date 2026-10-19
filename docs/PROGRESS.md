@@ -21,6 +21,10 @@
 - [x] Corrected the telemetry contract: `sessionType` for time trials, real
   venue name, `session_ended` with the laps actually completed, documented
   units, and bounded IndexedDB retention (no in-memory duplicate, 3 sessions).
+- [x] Designed and implemented the tiered feed: `live` (all cars, slim, 5 Hz),
+  `engineering` (player, full detail, 20 Hz), `events`, and a local-only
+  `archive`; per-tier Pub/Sub topics, BigQuery landing tables, curated schema
+  and merge queries under `cloud/bigquery/`.
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
 - [ ] Add optional organisation/team customisation as a later, additive feature.

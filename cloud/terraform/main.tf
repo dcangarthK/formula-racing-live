@@ -76,6 +76,18 @@ resource "google_cloud_run_v2_service" "ingest" {
         value = google_pubsub_topic.telemetry.name
       }
       env {
+        name  = "PUBSUB_TOPIC_LIVE"
+        value = google_pubsub_topic.tier["live"].name
+      }
+      env {
+        name  = "PUBSUB_TOPIC_ENGINEERING"
+        value = google_pubsub_topic.tier["engineering"].name
+      }
+      env {
+        name  = "PUBSUB_TOPIC_EVENTS"
+        value = google_pubsub_topic.tier["events"].name
+      }
+      env {
         name  = "TELEMETRY_ALLOWED_ORIGINS"
         value = var.allowed_origins
       }

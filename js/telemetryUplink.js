@@ -28,6 +28,12 @@ export class TelemetryUplink {
     this.retryMaxMs = Math.max(this.retryBaseMs, Math.floor(options.retryMaxMs || 30000));
     this.maxRetryAttempts = Math.max(1, Math.floor(options.maxRetryAttempts || 8));
     this.jitterRatio = Math.min(1, Math.max(0, options.jitterRatio ?? 0.2));
+    // The archive tier is the full-fidelity all-car snapshot. It stays in
+    // IndexedDB: streaming it costs roughly 3 GB for a 30-minute race, which
+    // no dashboard or analytical table reads.
+    this.tiers = new Set(Array.isArray(options.tiers) && options.tiers.length
+      ? options.tiers
+      : ['live', 'engineering', 'events']);
 
     if (this.enabled && typeof this.fetch !== 'function') throw new Error('fetch is unavailable');
     if (this.enabled && (typeof this.setTimeout !== 'function' || typeof this.clearTimeout !== 'function')) {
@@ -107,6 +113,7 @@ export class TelemetryUplink {
 
     for (const source of list) {
       if (!source || typeof source !== 'object') continue;
+      if (source.tier && !this.tiers.has(source.tier)) continue;
       requiredText(source.recordId, 'record.recordId');
 
       // Never mutate an in-flight batch. If capacity is exhausted, discard the

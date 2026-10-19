@@ -1,25 +1,35 @@
 export class PubSubPublisher {
-  constructor({ projectId, topic }) {
+  // One topic per tier, so an analytical consumer on the engineering feed can
+  // never delay the live feed, and each tier carries its own retention.
+  constructor({ projectId, topic, topics = {} }) {
     this.projectId = projectId;
-    this.topicName = topic;
+    this.topicNames = {
+      live: topics.live || topic,
+      engineering: topics.engineering || topic,
+      events: topics.events || topic,
+    };
     this.client = null;
-    this.topic = null;
+    this.topics = new Map();
   }
 
-  async _topic() {
-    if (this.topic) return this.topic;
-    const { PubSub } = await import('@google-cloud/pubsub');
-    this.client = new PubSub(this.projectId ? { projectId: this.projectId } : {});
-    this.topic = this.client.topic(this.topicName, {
+  async _topic(tier = 'events') {
+    const name = this.topicNames[tier] || this.topicNames.events;
+    const existing = this.topics.get(name);
+    if (existing) return existing;
+    if (!this.client) {
+      const { PubSub } = await import('@google-cloud/pubsub');
+      this.client = new PubSub(this.projectId ? { projectId: this.projectId } : {});
+    }
+    const topic = this.client.topic(name, {
       batching: { maxMessages: 100, maxMilliseconds: 25 },
       messageOrdering: true,
     });
-    return this.topic;
+    this.topics.set(name, topic);
+    return topic;
   }
 
   async publish(records) {
-    const topic = await this._topic();
-    return Promise.all(records.map(record => topic.publishMessage({
+    return Promise.all(records.map(async record => (await this._topic(record.tier)).publishMessage({
       json: record,
       attributes: {
         schemaVersion: record.schemaVersion,
@@ -28,6 +38,7 @@ export class PubSubPublisher {
         userId: record.userId,
         sequence: String(record.sequence),
         recordType: record.type,
+        tier: record.tier || 'events',
         // Pub/Sub is at-least-once. Consumers use recordId as their idempotency key.
         idempotencyKey: record.recordId,
       },

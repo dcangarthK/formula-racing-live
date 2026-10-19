@@ -52,6 +52,28 @@ Event records are transition based: `session_started`, `lap_completed`, `sector_
 
 Times are simulation times, not wall-clock. `simulationTimeSeconds` is the recorder's own 20 Hz clock; `raceTimeSeconds` is the session's race clock.
 
+## Tiers
+
+Every record carries `tier`. The recorder keeps one authoritative 20 Hz all-car
+snapshot and projects it:
+
+| Tier | Scope | Rate | Streamed |
+| --- | --- | --- | --- |
+| `live` | all cars, slim timing/dashboard fields | 5 Hz (`liveHz`) | yes |
+| `engineering` | player car, full detail | 20 Hz (`sampleHz`) | yes |
+| `events` | transitions | as detected | yes |
+| `archive` | all cars, full detail | 20 Hz | no, local only |
+
+Tiers are phase-locked: every live sample is also an engineering and archive
+sample at the same `simulationTimeSeconds`. `recordId` stays `sessionId:sequence`
+from one recorder sequence across all tiers, so ordering and idempotency hold
+when a consumer interleaves them. Pass `archive: false` to stop recording the
+full snapshot locally. Only `archive` and `events` are written to the local
+store (`persistTiers`); the streamed projections are not stored again. Streaming the archive tier would cost roughly 3 GB for a
+30-minute race; the three streamed tiers cost about 100 MB.
+
+Rationale, field lists and the BigQuery schema: [`docs/specs/telemetry-tiers.md`](docs/specs/telemetry-tiers.md).
+
 ## Live GCP transport
 
 `js/telemetryUplink.js` sends the same records to the optional service in
@@ -59,7 +81,10 @@ Times are simulation times, not wall-clock. `simulationTimeSeconds` is the recor
 the `formula-racing-telemetry-endpoint` meta value in `index.html`, or define
 `FORMULA_RACING_LIVE_CONFIG.telemetryEndpoint` before `main.js` loads.
 
-The client first posts the session envelope to `/v1/sessions`, receives a
+The uplink sends the `live`, `engineering` and `events` tiers and skips
+`archive`. The service routes each record to its tier's Pub/Sub topic
+(`PUBSUB_TOPIC_LIVE`, `PUBSUB_TOPIC_ENGINEERING`, `PUBSUB_TOPIC_EVENTS`), each
+of which has a BigQuery subscription. The client first posts the session envelope to `/v1/sessions`, receives a
 short-lived session/user-scoped bearer token, and keeps that token in memory
 only. Records are coalesced into ordered batches, retried with bounded backoff,
 and retain their stable `recordId` idempotency keys. A 401 triggers one token
