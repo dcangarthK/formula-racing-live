@@ -91,15 +91,15 @@ const moduleContracts = [
   },
 ];
 
-await check('TACN player identity and Greenwood Forest pilot are canonical data', async () => {
+await check('Apex Nine player identity and Greenwood Forest pilot are canonical data', async () => {
   const { TEAMS, DRIVERS, CALENDAR } = await importModule('js/data.js');
-  const team = TEAMS.find(item => item.id === 'tacn');
-  const player = DRIVERS.find(item => item.id === 'hacker');
+  const team = TEAMS.find(item => item.id === 'apexnine');
+  const player = DRIVERS.find(item => item.id === 'castellane');
   const pilot = CALENDAR.find(item => item.trackId === 'spa');
-  assert.ok(team, "js/data.js must include team id 'tacn'");
-  assert.equal(team.name, 'AI Consulting Network');
-  assert.ok(player, "js/data.js must include player driver id 'hacker'");
-  assert.equal(player.team, 'tacn');
+  assert.ok(team, "js/data.js must include team id 'apexnine'");
+  assert.equal(team.name, 'Apex Nine');
+  assert.ok(player, "js/data.js must include player driver id 'castellane'");
+  assert.equal(player.team, 'apexnine');
   assert.ok(pilot, "js/data.js must include pilot trackId 'spa'");
   assert.equal(pilot.circuitName, 'Greenwood Forest Circuit');
 });

@@ -33,7 +33,7 @@ async function clearStartGate(page) {
 
 async function chooseDriverAndTrack(page, mode = 'TIME TRIAL', beforeTrack = null) {
   await page.getByRole('button', { name: new RegExp(mode) }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
   await expect(page.locator('.track-card[data-t="melbourne"]')).toBeVisible();
   if (beforeTrack) await beforeTrack();
@@ -249,10 +249,10 @@ test('fixed-step accumulator bounds a long frame and discards its backlog', asyn
 test('main menu is keyboard-accessible and Race Now restores the last event', async ({ page }) => {
   const errors = await boot(page, {
     apexf1_onboarding_v1: '1',
-    apexf1_last_race: JSON.stringify({ driverId: 'hacker', trackId: 'melbourne' }),
+    apexf1_last_race: JSON.stringify({ driverId: 'castellane', trackId: 'melbourne' }),
   });
   const raceNow = page.getByRole('button', { name: /RACE NOW/ });
-  await expect(raceNow).toContainText('AVI');
+  await expect(raceNow).toContainText('CAS');
   await raceNow.focus();
   await expect(raceNow).toBeFocused();
   await page.keyboard.press('Enter');
@@ -281,7 +281,7 @@ test('main menu is keyboard-accessible and Race Now restores the last event', as
 test('loading focus loss pauses on onboarding exit and gamepad input waits for neutral', async ({ page }) => {
   const errors = await boot(page, {});
   await page.getByRole('button', { name: /TIME TRIAL/ }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
 
   let releaseRaceModule;
@@ -441,7 +441,7 @@ test('loading focus loss pauses on onboarding exit and gamepad input waits for n
 test('refocus during loading clears the pending auto-pause', async ({ page }) => {
   const errors = await boot(page, { apexf1_onboarding_v1: '1' });
   await page.getByRole('button', { name: /TIME TRIAL/ }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
 
   let releaseRaceModule;
@@ -497,7 +497,7 @@ test('refocus during loading clears the pending auto-pause', async ({ page }) =>
 test('failed lazy gameplay module offers accessible recovery and retry succeeds', async ({ page }) => {
   const errors = await boot(page, { apexf1_onboarding_v1: '1' });
   await page.getByRole('button', { name: /TIME TRIAL/ }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
 
   let failedRequests = 0;
@@ -529,7 +529,7 @@ test('failed lazy gameplay module offers accessible recovery and retry succeeds'
     };
   });
   expect(failedSession).toMatchObject({
-    hasSession: false, driverId: 'hacker', trackId: 'melbourne', trial: true,
+    hasSession: false, driverId: 'castellane', trackId: 'melbourne', trial: true,
   });
   expect(Number.isInteger(failedSession.seed)).toBe(true);
 
@@ -829,8 +829,8 @@ test('adaptive renderer, smoke exclusion, and WebGL recovery work in a live sess
 test('stored personal best creates a ghost and populates the live delta HUD', async ({ page }) => {
   const errors = await boot(page);
   await chooseDriverAndTrack(page, 'TIME TRIAL', async () => {
-    await page.evaluate(() => localStorage.setItem('apexf1_tt_v1:melbourne:hacker', JSON.stringify({
-      version: 1, trackId: 'melbourne', driverId: 'hacker', lap: 81.234,
+    await page.evaluate(() => localStorage.setItem('apexf1_tt_v1:melbourne:castellane', JSON.stringify({
+      version: 1, trackId: 'melbourne', driverId: 'castellane', lap: 81.234,
       sectors: [27, 27, 27.234], savedAt: new Date().toISOString(),
       frames: [[0, 0, 0, 0, 0, 0], [81.234, 0, 0, 0, 0, 5278]],
     })));

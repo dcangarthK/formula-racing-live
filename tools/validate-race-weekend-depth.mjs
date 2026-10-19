@@ -24,11 +24,11 @@ const { AIDriver } = await import('../js/ai.js');
 const { DRIVERS } = await import('../js/data.js');
 const { createRandom } = await import('../js/random.js');
 
-const PILOT_DRIVER_ID = 'hacker';
+const PILOT_DRIVER_ID = 'castellane';
 const DT = 1 / 30;
 const ZERO_INPUT = Object.freeze({ steer: 0, throttle: 0, brake: 0, boost: false });
 const pilot = DRIVERS.find(driver => driver.id === PILOT_DRIVER_ID);
-assert.equal(pilot?.team, 'tacn', 'the full-weekend pilot must be TACN driver hacker');
+assert.equal(pilot?.team, 'apexnine', 'the full-weekend pilot must be Apex Nine driver hacker');
 
 function makeContext(seed) {
   const scene = new THREE.Scene();
@@ -74,7 +74,7 @@ function assertPhysicalRows(rows, expected, label) {
 }
 
 // FP1: the complete field runs physically and the player earns a timed lap.
-const practiceContext = makeContext('tacn-spa-fp1');
+const practiceContext = makeContext('apexnine-spa-fp1');
 const practice = makeSession(practiceContext, 'practice', { qualiStage: 'FP1' });
 const practiceElapsed = runToQualifyingDone(
   practice,
@@ -88,7 +88,7 @@ assert.equal(practice.qualifying.stage, 'FP1');
 // Q1-Q3: intentionally speed-limit the player in Q1 so the deterministic test
 // covers the important eliminated-player path. All subsequent times are still
 // earned by the surviving physical AI cars; nothing is sampled or fabricated.
-const qualifyingContext = makeContext('tacn-spa-staged-qualifying');
+const qualifyingContext = makeContext('apexnine-spa-staged-qualifying');
 const qualifying = makeSession(qualifyingContext, 'quali', {
   qualiStage: 'Q1',
   qualiFormat: 'staged',
@@ -112,7 +112,7 @@ const q2Advance = qualifying.advanceQualifyingStage();
 assert.equal(q2Advance.stage, 'Q2');
 assert.equal(q2Advance.survivors.length, 15);
 assert.equal(q2Advance.eliminated.length, 7);
-assert.equal(q2Advance.playerActive, false, 'speed-limited TACN player should exercise eliminated-player spectating');
+assert.equal(q2Advance.playerActive, false, 'speed-limited Apex Nine player should exercise eliminated-player spectating');
 assert.equal(qualifying.player.phys.disabled, true);
 assert.equal(qualifying.qualiState, 'awaiting-field');
 assert.notEqual(qualifying.focusEntry, qualifying.player);
@@ -164,7 +164,7 @@ assert.deepEqual(
 
 // The final qualifying order feeds a formation lap, then the normal grid and
 // five-light start. Formation crossing must not consume a race lap.
-const raceContext = makeContext('tacn-spa-weekend-race');
+const raceContext = makeContext('apexnine-spa-weekend-race');
 const messages = [];
 const race = makeSession(raceContext, 'race', {
   gridOrder: finalGrid.map(row => row.driverId),

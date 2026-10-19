@@ -25,7 +25,7 @@ try {
   await page.addInitScript(() => {
     localStorage.clear();
     localStorage.setItem('apexf1_onboarding_v1', '1');
-    localStorage.setItem('apexf1_last_race', JSON.stringify({ driverId: 'hacker', trackId: 'melbourne' }));
+    localStorage.setItem('apexf1_last_race', JSON.stringify({ driverId: 'castellane', trackId: 'melbourne' }));
     window.requestAnimationFrame = () => 1;
   });
   await page.goto(`http://127.0.0.1:${port}/`);

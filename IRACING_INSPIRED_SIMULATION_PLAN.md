@@ -3,7 +3,7 @@
 ## Product boundary
 
 This upgrade targets a high-quality, single-player Formula simulation in a web
-browser. The pilot experience is Avi Hacker in the AI Consulting Network car at
+browser. The pilot experience is Ruben Castellane in the Apex Nine car at
 Greenwood Forest Circuit (`spa`). Arrow keys remain the primary driving input.
 
 Online ranked competition, safety rating, iRating, matchmaking, stewarding
@@ -21,7 +21,7 @@ feedback, and race weekend share one simulation state.
 | A road that changes | [Track Technology](https://www.iracing.com/track-technology/) connects track geometry, camber and undulations with rubber, surface temperature, shade and evolving grip. | Greenwood uses authored elevation, grade, camber, bump and drainage data plus rubber, marbles, dust, temperature, wetness, puddling and line drying in `js/trackState.js`. |
 | Weather that changes driving | The [Weather System](https://www.iracing.com/weather/) describes water interacting with tyres, alternate wet lines, forecasts, spotter calls, rain audio and spray. | Seeded weather drives real surface grip, Intermediate/Wet tyre choice, wet-line strategy, rain/spray visuals and layered audio through `js/weather.js`, `js/trackState.js`, `js/effects.js`, `js/strategy.js` and `js/audio.js`. |
 | Driver information, not arcade clutter | The Formula experience emphasizes precision and extracting the car's systems; iRacing's [2026 Season 3 notes](https://support.iracing.com/support/solutions/articles/31000179016-2026-season-3-initial-release-notes-2026-06-09-01-) also document track-map, fuel and tyre UI work. | Seated cockpit, halo, steering wheel, shift lights, two dash pages, proximity radar, track map, per-wheel temperatures/pressures, fuel/ERS/strategy/damage/race-control status and JSON ghost export. |
-| Configurable offline race events | The official [AI racing guide](https://support.iracing.com/support/solutions/articles/31000153530-how-to-use-iracing-ai) covers single races and championships with selectable practice, weather, track conditions, time of day and opponent difficulty. | A dedicated TACN weekend exposes physical FP1, Q1/Q2/Q3, formation, start, race, pit strategy, reliability, damage, flags and 22-car AI while preserving quick race, time trial and championship. |
+| Configurable offline race events | The official [AI racing guide](https://support.iracing.com/support/solutions/articles/31000153530-how-to-use-iracing-ai) covers single races and championships with selectable practice, weather, track conditions, time of day and opponent difficulty. | A dedicated Apex Nine weekend exposes physical FP1, Q1/Q2/Q3, formation, start, race, pit strategy, reliability, damage, flags and 22-car AI while preserving quick race, time trial and championship. |
 | Iteration backed by measurement | iRacing release notes continually tune tyres, track state, AI, damage and race control instead of treating them as finished effects. | Deterministic Node probes, browser interaction tests, runtime-error/network checks, mobile layout checks and p95/p99 frame budgets are explicit release gates. |
 
 ## Delivery map
@@ -44,7 +44,7 @@ feedback, and race weekend share one simulation state.
 2. Run the focused deterministic probe for the changed subsystem.
 3. Run `npm test` to protect the existing tracks, race loop, physics, assets and
    performance budgets.
-4. Run `npm run test:simulation-upgrade` for the TACN/Greenwood contract.
+4. Run `npm run test:simulation-upgrade` for the Apex Nine/Greenwood contract.
 5. Inspect the actual browser at desktop and mobile sizes, exercise the arrow
    keys, and check console/network state.
 6. Fix the first real failure and repeat until every gate is green.
@@ -52,7 +52,7 @@ feedback, and race weekend share one simulation state.
 ## Honest limits
 
 - Greenwood is high-detail authored geometry, not a licensed laser scan.
-- The car is the fictional AI Consulting Network entry, not a licensed Formula
+- The car is the fictional Apex Nine entry, not a licensed Formula
   One chassis or livery.
 - Keyboard filters can communicate weight and grip, but cannot reproduce a
   force-feedback wheel or motion rig.

@@ -17,7 +17,7 @@ const { DRIVERS, TEAMS, CALENDAR, STORAGE_SUFFIX } = await import('../js/data.js
 const { Championship } = await import('../js/championship.js');
 
 const STORAGE_KEY = 'apexf1_2026_career' + (STORAGE_SUFFIX || '');
-const PLAYER_ID = 'hacker';
+const PLAYER_ID = 'castellane';
 const CLASSIFICATION = DRIVERS.map((driver) => driver.id);
 const clone = (value) => JSON.parse(JSON.stringify(value));
 

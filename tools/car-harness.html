@@ -259,8 +259,8 @@ async function run() {
   const c = S.circuit;
 
   // grid: front row = dark, saturated, non-yellow liveries so the debris and
-  // mirror probes are unambiguous; TACN's saturated accent is included for (f)
-  const wantIds = ['kuroshio', 'norvik', 'vantara', 'tacn', 'solaris', 'meridian', 'halcyon', 'zephyr'];
+  // mirror probes are unambiguous; Apex Nine's saturated accent is included for (f)
+  const wantIds = ['kuroshio', 'norvik', 'vantara', 'apexnine', 'solaris', 'meridian', 'halcyon', 'zephyr'];
   const teams = wantIds.map(id => TEAMS.find(t => t.id === id)).filter(Boolean);
   check(teams.length === 8, 'harness grid: 8 teams resolved', `[${teams.map(t => t.id).join(',')}]`);
 
@@ -460,8 +460,8 @@ async function run() {
   // -------------------------------------------------- (f) rear-wing bloom clip
   head('(f) bright rear-wing surfaces stay under the day bloom threshold');
   {
-    const tac = cars[3];   // TACN: blue-charcoal body + electric-azure mainplane
-    check(tac.team.id === 'tacn', 'TACN accent car resolved', `[${tac.team.id}]`);
+    const tac = cars[3];   // Apex Nine: blue-charcoal body + electric-azure mainplane
+    check(tac.team.id === 'apexnine', 'Apex Nine accent car resolved', `[${tac.team.id}]`);
     tac.group.updateMatrixWorld(true);
     // rear three-quarter framing on the wing
     const camL = tac.group.localToWorld(new THREE.Vector3(3.0, 2.0, -6.5));
@@ -472,7 +472,7 @@ async function run() {
     check(wingParts.length === 3, 'sculpted rear wing parts found', `[${wingParts.length}]`);
     const wm = visibleMask(S, wingParts);
     const im2 = wm.frame;
-    await shot('car-02-tacn-wing', im2);
+    await shot('car-02-apexnine-wing', im2);
     // The bloom high-pass thresholds LINEAR luminance at 0.86; through ACES
     // (exposure 1.05) + sRGB that lands at ~sRGB 214. Wing pixels above it
     // would seed a bloom halo on the bright paint.

@@ -20,7 +20,7 @@ async function boot(page) {
 
 async function startRace(page) {
   await page.getByRole('button', { name: /QUICK RACE/ }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
   await expect(page.locator('.track-card[data-t="melbourne"]')).toBeVisible();
   await page.locator('.track-card[data-t="melbourne"]').click();

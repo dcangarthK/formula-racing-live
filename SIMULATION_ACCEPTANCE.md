@@ -15,7 +15,7 @@ npm run test:simulation-browser
 
 ## Product contract
 
-The accepted pilot is the player driver `hacker`, team `tacn` (AI Consulting Network), at track `spa`, whose public fictional venue name is **Greenwood Forest Circuit**. Arrow keys are the primary driving input. The browser must provide a named `cockpit` camera, a visible cockpit dash and telemetry, deterministic weather and track-surface state, finite enhanced vehicle dynamics, stable race-control/damage/strategy state, no remote runtime dependency, and adaptive mobile controls.
+The accepted pilot is the player driver `hacker`, team `apexnine` (Apex Nine), at track `spa`, whose public fictional venue name is **Greenwood Forest Circuit**. Arrow keys are the primary driving input. The browser must provide a named `cockpit` camera, a visible cockpit dash and telemetry, deterministic weather and track-surface state, finite enhanced vehicle dynamics, stable race-control/damage/strategy state, no remote runtime dependency, and adaptive mobile controls.
 
 The source gate imports pure modules directly in Node. Canonical files and accepted minimum exports are:
 
@@ -51,8 +51,8 @@ window.__game.applyScenario(scenario);
   state: 'race',
   paused: false,
   player: {
-    driverId: 'hacker',
-    teamId: 'tacn',
+    driverId: 'castellane',
+    teamId: 'apexnine',
     physics: { /* all numeric leaves finite; includes enhanced outputs */ }
   },
   track: {
@@ -100,7 +100,7 @@ The marked surfaces must be visible when their state is exercised. Screenshots a
 
 The Playwright target uses its own server port (`127.0.0.1:8342`) and refuses to reuse an existing listener. It exercises:
 
-1. TACN driver and Greenwood Forest selection, launch, local-only requests, and runtime-console health.
+1. Apex Nine driver and Greenwood Forest selection, launch, local-only requests, and runtime-console health.
 2. `ArrowUp`, `ArrowDown`, `ArrowLeft`, and `ArrowRight` through the production keyboard path.
 3. `KeyC` cycling into the named cockpit camera, with cockpit and telemetry visible.
 4. Pause while throttle is held, input release, resume, and finite recovered physics.

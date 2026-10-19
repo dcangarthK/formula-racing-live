@@ -5,7 +5,7 @@ async function bootHandling(page) {
     localStorage.clear();
     localStorage.setItem('apexf1_onboarding_v1', '1');
     localStorage.setItem('apexf1_last_race', JSON.stringify({
-      driverId: 'hacker',
+      driverId: 'castellane',
       trackId: 'melbourne',
     }));
     // Keep the production Game instance and input path, but make the test the

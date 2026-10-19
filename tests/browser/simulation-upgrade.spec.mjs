@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const PILOT_SEED = 'greenwood-tacn-acceptance-2026';
+const PILOT_SEED = 'greenwood-apexnine-acceptance-2026';
 
 async function seed(page) {
   await page.addInitScript(() => {
@@ -44,10 +44,10 @@ async function openMenu(page) {
 
 async function selectPilot(page, beforeLaunch) {
   await page.getByRole('button', { name: /QUICK RACE/ }).click();
-  const player = page.locator('.drv[data-d="hacker"]');
-  await expect(player, "The player option must use data-d='hacker'").toBeVisible();
-  await expect(player).toHaveAttribute('aria-label', /Avi Hacker/i);
-  await expect(player.locator('xpath=ancestor::*[contains(@class,"select-card")][1]')).toContainText('AI Consulting Network');
+  const player = page.locator('.drv[data-d="castellane"]');
+  await expect(player, "The player option must use data-d='castellane'").toBeVisible();
+  await expect(player).toHaveAttribute('aria-label', /Ruben Castellane/i);
+  await expect(player.locator('xpath=ancestor::*[contains(@class,"select-card")][1]')).toContainText('Apex Nine');
   await player.click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
 
@@ -123,7 +123,7 @@ function expectFiniteTree(value, label = 'snapshot') {
   }
 }
 
-test('TACN / Greenwood pilot launches without an online dependency', async ({ page }, testInfo) => {
+test('Apex Nine / Greenwood pilot launches without an online dependency', async ({ page }, testInfo) => {
   const runtimeErrors = monitorRuntime(page);
   const externalRequests = [];
   await page.route('**/*', async route => {
@@ -170,10 +170,10 @@ test('TACN / Greenwood pilot launches without an online dependency', async ({ pa
   expect(runtimeErrors, `Runtime emitted errors:\n${runtimeErrors.join('\n')}`).toEqual([]);
 });
 
-test('TACN full weekend is reachable from the keyboard-first main menu and opens physical FP1', async ({ page }, testInfo) => {
+test('Apex Nine full weekend is reachable from the keyboard-first main menu and opens physical FP1', async ({ page }, testInfo) => {
   const runtimeErrors = monitorRuntime(page);
   await openMenu(page);
-  const weekend = page.getByRole('button', { name: /TACN RACE WEEKEND · GREENWOOD FOREST/i });
+  const weekend = page.getByRole('button', { name: /APEX NINE RACE WEEKEND · GREENWOOD FOREST/i });
   await expect(weekend).toBeVisible();
   await weekend.focus();
   await page.keyboard.press('Enter');
@@ -194,8 +194,8 @@ test('TACN full weekend is reachable from the keyboard-first main menu and opens
     trial: window.__game.session.trial,
   }));
   expect(weekendState).toEqual({
-    driverId: 'hacker',
-    teamId: 'tacn',
+    driverId: 'castellane',
+    teamId: 'apexnine',
     trackId: 'spa',
     mode: 'practice',
     stage: 'FP1',
@@ -206,14 +206,14 @@ test('TACN full weekend is reachable from the keyboard-first main menu and opens
   await startReadySession(page);
   await expect(page.locator('#tw-title')).toContainText('PRACTICE · FP1');
   await expect(page.locator('#t-lap')).toContainText('FP1');
-  await captureEvidence(page, testInfo, 'tacn-full-weekend-fp1');
+  await captureEvidence(page, testInfo, 'apexnine-full-weekend-fp1');
   expect(runtimeErrors, `Runtime emitted errors:\n${runtimeErrors.join('\n')}`).toEqual([]);
 });
 
 test('driving session waits at zero speed in elevated chase view until explicit start', async ({ page }, testInfo) => {
   const runtimeErrors = monitorRuntime(page);
   await openMenu(page);
-  const weekend = page.getByRole('button', { name: /TACN RACE WEEKEND · GREENWOOD FOREST/i });
+  const weekend = page.getByRole('button', { name: /APEX NINE RACE WEEKEND · GREENWOOD FOREST/i });
   await weekend.focus();
   await page.keyboard.press('Enter');
   await page.waitForFunction(
@@ -278,7 +278,7 @@ test('arrow controls, cockpit dash, telemetry, pause and recovery share one stab
   await bootPilot(page);
 
   let snapshot = await debugSnapshot(page);
-  expect(snapshot.player).toMatchObject({ driverId: 'hacker', teamId: 'tacn' });
+  expect(snapshot.player).toMatchObject({ driverId: 'castellane', teamId: 'apexnine' });
   expect(snapshot.track).toMatchObject({ id: 'spa', name: 'Greenwood Forest Circuit' });
 
   const controls = [

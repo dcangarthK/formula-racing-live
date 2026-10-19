@@ -230,8 +230,8 @@ ok(nodeCount + decals.length + 1 <= 80,
 /* ---- both build paths, end to end --------------------------------------- */
 const TEAM = { id: 'ferrari', color: 0xe10600, accent: 0xffe66d };
 const DRIVER = { num: 16, code: 'LEC' };
-const TACN_TEAM = { id: 'tacn', color: 0x111c2e, accent: 0x16c7ff };
-const TACN_DRIVER = { id: 'hacker', num: 26, code: 'AVI' };
+const APEX_TEAM = { id: 'apexnine', color: 0x111c2e, accent: 0x16c7ff };
+const APEX_DRIVER = { id: 'castellane', num: 26, code: 'AVI' };
 
 const materialOf = (h, name) => {
   let found = null;
@@ -250,14 +250,14 @@ const materialOf = (h, name) => {
     (k) => h.wheels[k] && h.wheels[k].rotation.order === 'YXZ'),
   'primitives handle keeps the wheels API');
 
-  const fallbackTacn = CAR.buildCarMesh(TACN_TEAM, TACN_DRIVER);
-  ok(fallbackTacn.source === 'primitives' && fallbackTacn.liveryDetail?.name === 'tacnDeckLivery',
-    'primitive TACN car carries its intentional shoulder-deck livery');
-  ok(fallbackTacn.liveryDetail?.material?.map?.image?.width === 512,
-    'TACN macro livery uses one bounded 512px texture');
-  ok(fallbackTacn.body.getObjectByName('monocoque')?.material?.envMapIntensity === 0.68
-    && fallbackTacn.body.getObjectByName('rearWingMainplane')?.material?.envMapIntensity === 0.72,
-  'primitive TACN paint uses restrained environment reflection');
+  const fallbackApex = CAR.buildCarMesh(APEX_TEAM, APEX_DRIVER);
+  ok(fallbackApex.source === 'primitives' && fallbackApex.liveryDetail?.name === 'apexDeckLivery',
+    'primitive Apex Nine car carries its intentional shoulder-deck livery');
+  ok(fallbackApex.liveryDetail?.material?.map?.image?.width === 512,
+    'Apex Nine macro livery uses one bounded 512px texture');
+  ok(fallbackApex.body.getObjectByName('monocoque')?.material?.envMapIntensity === 0.68
+    && fallbackApex.body.getObjectByName('rearWingMainplane')?.material?.envMapIntensity === 0.72,
+  'primitive Apex Nine paint uses restrained environment reflection');
 }
 
 const tpl = await CAR.preloadCarModel(scene.clone(true));
@@ -266,7 +266,7 @@ ok(!!tpl && CAR.carModelLoaded(), 'preloadCarModel(scene) installs the template'
 const a = CAR.buildCarMesh(TEAM, DRIVER);
 const b = CAR.buildCarMesh({ id: 'mclaren', color: 0xff8000, accent: 0x111111 },
   { num: 4, code: 'NOR' });
-const tacn = CAR.buildCarMesh(TACN_TEAM, TACN_DRIVER);
+const apexnine = CAR.buildCarMesh(APEX_TEAM, APEX_DRIVER);
 ok(a.source === 'glb', 'buildCarMesh() uses the GLB template once loaded',
   `[${a.source}]`);
 ok(a.wheelRadius === 0.34, 'wheelRadius still 0.34', `[${a.wheelRadius}]`);
@@ -313,16 +313,16 @@ ok(bodyA.color.getHex() === 0xe10600 && bodyB.color.getHex() === 0xff8000,
 const accA = matOf(a, 'accent');
 ok(accA && accA.color.getHex() === 0xffe66d, "'accent' is recoloured to team.accent",
   `[#${accA.color.getHexString()}]`);
-ok(matOf(tacn, 'body')?.color.getHex() === TACN_TEAM.color
-  && matOf(tacn, 'accent')?.color.getHex() === TACN_TEAM.accent,
-"TACN's blue-charcoal / electric-azure palette reaches the sculpted car");
-ok(matOf(tacn, 'body')?.envMapIntensity === 0.68
-  && matOf(tacn, 'accent')?.envMapIntensity === 0.72,
-"TACN's sculpted clearcoat stays inside the restrained IBL range");
-ok(tacn.liveryDetail?.name === 'tacnDeckLivery'
-  && tacn.body.getObjectByName('tacnDeckLivery') === tacn.liveryDetail,
-"TACN's macro livery is attached to the live body handle");
-ok(!a.liveryDetail && !a.body.getObjectByName('tacnDeckLivery'),
+ok(matOf(apexnine, 'body')?.color.getHex() === APEX_TEAM.color
+  && matOf(apexnine, 'accent')?.color.getHex() === APEX_TEAM.accent,
+"Apex Nine's blue-charcoal / electric-azure palette reaches the sculpted car");
+ok(matOf(apexnine, 'body')?.envMapIntensity === 0.68
+  && matOf(apexnine, 'accent')?.envMapIntensity === 0.72,
+"Apex Nine's sculpted clearcoat stays inside the restrained IBL range");
+ok(apexnine.liveryDetail?.name === 'apexDeckLivery'
+  && apexnine.body.getObjectByName('apexDeckLivery') === apexnine.liveryDetail,
+"Apex Nine's macro livery is attached to the live body handle");
+ok(!a.liveryDetail && !a.body.getObjectByName('apexDeckLivery'),
   'the team-specific livery does not alter other cars');
 for (const n of ['body', 'accent', 'band', 'glow', 'rainlight']) {
   const m = matOf(a, n);
@@ -370,10 +370,10 @@ ok(matOf(b, 'band').color.getHex() === 0xffd24a,
     ok(names.includes(d.name), `decal plane '${d.name}' is attached to the body`);
   }
   ok(objects <= 80, 'a built car stays within 80 objects', `[${objects}]`);
-  let tacnObjects = 0;
-  tacn.group.traverse(() => { tacnObjects++; });
-  ok(tacnObjects <= 80, 'the fully dressed TACN car stays within 80 objects',
-    `[${tacnObjects}]`);
+  let apexObjects = 0;
+  apexnine.group.traverse(() => { apexObjects++; });
+  ok(apexObjects <= 80, 'the fully dressed Apex Nine car stays within 80 objects',
+    `[${apexObjects}]`);
   // undo the axle sweep above: a spun wheel's AABB-of-AABB dips below the road
   // even though its vertices do not, so measure the car at rest and precisely.
   for (const k of ['fl', 'fr', 'rl', 'rr']) a.wheels[k].rotation.set(0, 0, 0);

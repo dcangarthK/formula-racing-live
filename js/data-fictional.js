@@ -16,11 +16,11 @@ export const TEAMS = [
   // color/accent: invented liveries. perf: 0.90-0.99 relative car performance —
   // a balanced spread so the fictional grid remains competitive.
   { id: 'vantara',    name: 'Vantara',                 fullName: 'Vantara Racing Collective',            engine: 'Kestrel',  color: 0x7B2FF7, accent: 0xFFD200, perf: 0.99 },
-  // TACN's deep blue-charcoal + electric azure is intentionally authored as a
+  // Apex Nine's deep blue-charcoal + electric azure is intentionally authored as a
   // racing livery, not pure black/white chrome. The cool off-black keeps its
   // body shape in night lighting while the saturated accent remains distinct
   // from every other team at chase-camera distance.
-  { id: 'tacn',       name: 'AI Consulting Network',   fullName: 'The AI Consulting Network Racing Team', engine: 'Apex',     color: 0x111C2E, accent: 0x16C7FF, perf: 0.97 },
+  { id: 'apexnine',   name: 'Apex Nine',               fullName: 'Apex Nine Racing',                     engine: 'Apex',     color: 0x111C2E, accent: 0x16C7FF, perf: 0.97 },
   { id: 'solaris',    name: 'Solaris',                 fullName: 'Solaris Racing Works',                 engine: 'Solstice', color: 0xFF4D1F, accent: 0x141414, perf: 0.96 },
   { id: 'meridian',   name: 'Meridian',                fullName: 'Meridian Motorsport Group',            engine: 'Volta',    color: 0x00A86B, accent: 0xF4F4F4, perf: 0.96 },
   { id: 'halcyon',    name: 'Halcyon',                 fullName: 'Halcyon Racing Division',              engine: 'Kestrel',  color: 0x2277CC, accent: 0xEAF4FF, perf: 0.95 },
@@ -35,8 +35,8 @@ export const TEAMS = [
 export const DRIVERS = [
   // 22 invented drivers, two per team. Numbers are unique and were chosen so
   // stable across saved championships.
-  { id: 'hacker',       code: 'AVI', num: 26, firstName: 'Avi',    lastName: 'Hacker',        team: 'tacn',       country: 'USA', pace: 0.97, consistency: 0.94, racecraft: 0.95 },
-  { id: 'marchetti',    code: 'MAR', num: 7,  firstName: 'Ines',   lastName: 'Marchetti',     team: 'tacn',       country: 'ITA', pace: 0.94, consistency: 0.92, racecraft: 0.92 },
+  { id: 'castellane',   code: 'CAS', num: 26, firstName: 'Ruben',  lastName: 'Castellane',    team: 'apexnine',   country: 'FRA', pace: 0.97, consistency: 0.94, racecraft: 0.95 },
+  { id: 'marchetti',    code: 'MAR', num: 7,  firstName: 'Ines',   lastName: 'Marchetti',     team: 'apexnine',   country: 'ITA', pace: 0.94, consistency: 0.92, racecraft: 0.92 },
   { id: 'nyholm',       code: 'NYH', num: 2,  firstName: 'Kasper', lastName: 'Nyholm',        team: 'vantara',    country: 'DEN', pace: 0.98, consistency: 0.95, racecraft: 0.96 },
   { id: 'quintero',     code: 'QUI', num: 19, firstName: 'Rafael', lastName: 'Quintero',      team: 'vantara',    country: 'COL', pace: 0.96, consistency: 0.93, racecraft: 0.93 },
   { id: 'vesely',       code: 'VES', num: 8,  firstName: 'Dario',  lastName: 'Vesely',        team: 'solaris',    country: 'CZE', pace: 0.99, consistency: 0.96, racecraft: 0.98 },

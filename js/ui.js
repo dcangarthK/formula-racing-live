@@ -28,7 +28,7 @@ const DEFAULT_SETTINGS = {
   autoPause: true, touchControls: true, steeringResponse: 'balanced',
   cockpitFov: 'natural', cockpitSeat: 'standard', headMotion: true,
 };
-const PILOT_DRIVER_ID = 'hacker';
+const PILOT_DRIVER_ID = 'castellane';
 const PILOT_TRACK_ID = 'spa';
 const teamById = Object.fromEntries(TEAMS.map(t => [t.id, t]));
 
@@ -255,7 +255,7 @@ export class UI {
         <span id="driver-profile-note">Your stable user ID associates this name with race telemetry.</span>
       </div><div class="main-nav">
         ${raceNow}
-        <button type="button" class="nav-item pilot-run" data-a="pilot"><span><h3>TACN RACE WEEKEND · GREENWOOD FOREST</h3><p>AVI · FP1 · physical Q1/Q2/Q3 · formation lap · race</p></span></button>
+        <button type="button" class="nav-item pilot-run" data-a="pilot"><span><h3>APEX NINE RACE WEEKEND · GREENWOOD FOREST</h3><p>CAS · FP1 · physical Q1/Q2/Q3 · formation lap · race</p></span></button>
         <button type="button" class="nav-item" data-a="quick"><span><h3>QUICK RACE</h3><p>Jump straight into a race weekend — any team, any circuit</p></span></button>
         ${champTile}
         <button type="button" class="nav-item" data-a="trial"><span><h3>TIME TRIAL</h3><p>Empty track, low fuel, soft tyres — chase the perfect lap</p></span></button>
@@ -816,7 +816,7 @@ function liveryChips(team) {
   return cols.map(col => `<i style="background:${col}"></i>`).join('');
 }
 // Text tinted with a team colour has to stay legible on the dark panels. The
-// near-black liveries (including TACN's blue-charcoal) and deep navies fail otherwise, on
+// near-black liveries (including Apex Nine's blue-charcoal) and deep navies fail otherwise, on
 // either roster. Blend toward white until the relative luminance clears a
 // floor, which keeps the hue.
 function readable(n, floor = 0.55) {

@@ -16,10 +16,10 @@ assert.equal(deterministicJSON({ z: 1, a: { y: 2, x: 3 } }), '{\n  "a": {\n    "
 
 const ui = fs.readFileSync(new URL('../js/ui.js', import.meta.url), 'utf8');
 const main = fs.readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
-assert.match(ui, /PILOT_DRIVER_ID = 'hacker'/);
+assert.match(ui, /PILOT_DRIVER_ID = 'castellane'/);
 assert.match(ui, /PILOT_TRACK_ID = 'spa'/);
-assert.match(ui, /The AI Consulting Network Racing Team/);
-assert.match(main, /d\.team === 'tacn'/);
+assert.match(ui, /The Apex Nine Racing/);
+assert.match(main, /d\.team === 'apexnine'/);
 assert.match(main, /\(this\.camMode \+ 1\) % 4/);
 
 console.log('cockpit/controls validator: PASS');

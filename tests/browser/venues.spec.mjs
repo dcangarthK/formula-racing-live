@@ -549,8 +549,8 @@ async function hdrResourcePaths(page) {
 async function chooseQuickRace(page, trackId) {
   await page.getByRole('button', { name: /QUICK RACE/ }).click();
 
-  const avi = page.locator('.drv[data-d="hacker"]');
-  await expect(avi).toHaveAttribute('aria-label', /Avi Hacker/i);
+  const avi = page.locator('.drv[data-d="castellane"]');
+  await expect(avi).toHaveAttribute('aria-label', /Ruben Castellane/i);
   await avi.click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
 
@@ -922,7 +922,7 @@ async function captureVenueRun(page, venue, runNumber, preFreezeTicks) {
     paused: true,
     state: 'race',
     sessionMode: 'race',
-    driverId: 'hacker',
+    driverId: 'castellane',
     trackId: venue.trackId,
     querySeed: venue.seed,
     graphicsQuality: 'high',

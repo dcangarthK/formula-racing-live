@@ -390,11 +390,11 @@ function rearIdentityTex(team, drv) {
     const base = new THREE.Color(team.color);
     const accent = new THREE.Color(team.accent);
 
-    // TACN gets a deliberately terse broadcast mark. Its full team name was
+    // Apex Nine gets a deliberately terse broadcast mark. Its full team name was
     // technically present before, but shrank below legibility on the narrow
     // rear flap and read as anonymous black/white bodywork from the chase cam.
-    // These three large blocks survive the same downsampling: TACN / AVI / 26.
-    if (team.id === 'tacn') {
+    // These three large blocks survive the same downsampling: APX / CAS / 26.
+    if (team.id === 'apexnine') {
       g.fillStyle = '#0d1728';
       g.fillRect(0, 0, c.width, c.height);
       g.fillStyle = '#' + accent.getHexString();
@@ -410,14 +410,14 @@ function rearIdentityTex(team, drv) {
       g.fillStyle = '#d7edf4';
       g.textAlign = 'left'; g.textBaseline = 'middle';
       g.font = 'italic 900 68px Arial';
-      g.fillText('TACN', 58, 68);
+      g.fillText('APX', 58, 68);
       g.fillStyle = 'rgba(215,237,244,0.76)';
       g.font = '800 27px Arial';
-      g.fillText(`${code || 'AVI'}  //  FORMULA RACING`, 62, 124);
+      g.fillText(`${code || 'CAS'}  //  FORMULA RACING`, 62, 124);
       g.textAlign = 'center';
       g.fillStyle = '#0d1728';
       g.font = 'italic 900 72px Arial';
-      g.fillText(code || 'AVI', 535, 88);
+      g.fillText(code || 'CAS', 535, 88);
       g.textAlign = 'right';
       g.fillStyle = '#d7edf4';
       g.font = 'italic 900 122px Arial';
@@ -465,12 +465,12 @@ function rearIdentityTex(team, drv) {
 // macro-livery layer, not a decal sheet: two long electric-azure spears frame
 // the cockpit, with a single large driver identity on the rear-facing ends.
 // Transparent negative space lets the clearcoated blue-charcoal body remain the
-// dominant mass. At 512px it costs 1 MiB per TACN driver on the grid and adds
+// dominant mass. At 512px it costs 1 MiB per Apex Nine driver on the grid and adds
 // only one draw call/object per car.
-function tacnDeckTex(drv) {
-  const code = String(drv.code || 'AVI').toUpperCase();
+function apexDeckTex(drv) {
+  const code = String(drv.code || 'CAS').toUpperCase();
   const num = String(drv.num ?? 26);
-  return T(`tacnDeck:${code}:${num}`, () => {
+  return T(`apexDeck:${code}:${num}`, () => {
     const c = cnv(512, 512), g = c.getContext('2d');
     g.clearRect(0, 0, c.width, c.height);
 
@@ -518,7 +518,7 @@ function tacnDeckTex(drv) {
     g.textBaseline = 'middle';
     g.textAlign = 'center';
     g.font = 'italic 900 58px Arial';
-    g.fillText('TACN', 119, 414);
+    g.fillText('APX', 119, 414);
     g.font = 'italic 900 86px Arial';
     g.fillText(num, 393, 410);
     g.fillStyle = 'rgba(215,237,244,0.82)';
@@ -681,7 +681,7 @@ export const PAINT_SPEC = {
   body: { metalness: 0.06, roughness: 0.34, clearcoat: 1.0, clearcoatRoughness: 0.17 },
   accent: { metalness: 0.05, roughness: 0.37, clearcoat: 0.92, clearcoatRoughness: 0.20 },
 };
-const paintSpec = (team, kind) => (team.id === 'tacn'
+const paintSpec = (team, kind) => (team.id === 'apexnine'
   ? { ...PAINT_SPEC[kind], envMapIntensity: kind === 'body' ? 0.68 : 0.72 }
   : PAINT_SPEC[kind]);
 const bodyM = (team) => M(`body:${team.id || 'team'}:${team.color}`, () => new THREE.MeshPhysicalMaterial({
@@ -753,9 +753,9 @@ function decalM(key, tex) {
   }));
 }
 
-function tacnDeckM(drv) {
-  const tex = tacnDeckTex(drv);
-  return M(`tacnDeck:${drv.code || 'AVI'}:${drv.num ?? 26}`, () =>
+function apexDeckM(drv) {
+  const tex = apexDeckTex(drv);
+  return M(`apexDeck:${drv.code || 'CAS'}:${drv.num ?? 26}`, () =>
     new THREE.MeshPhysicalMaterial({
       map: tex, transparent: true, depthWrite: false,
       side: THREE.FrontSide, metalness: 0.04, roughness: 0.36,
@@ -1251,10 +1251,10 @@ function addRearIdentity(body, team, drv) {
   return lod;
 }
 
-function addTacnDeckLivery(body, team, drv, y) {
-  if (team.id !== 'tacn') return null;
-  const deck = new THREE.Mesh(PLANE(), tacnDeckM(drv));
-  deck.name = 'tacnDeckLivery';
+function addApexDeckLivery(body, team, drv, y) {
+  if (team.id !== 'apexnine') return null;
+  const deck = new THREE.Mesh(PLANE(), apexDeckM(drv));
+  deck.name = 'apexDeckLivery';
   deck.position.set(0, y, -0.22);
   deck.rotation.x = -HALF_PI;
   deck.scale.set(1.36, 1.62, 1);
@@ -1812,7 +1812,7 @@ function buildFromTemplate(team, driver) {
     m.renderOrder = 1;
     body.add(m);
   }
-  const liveryDetail = addTacnDeckLivery(body, team, drv, 0.556);
+  const liveryDetail = addApexDeckLivery(body, team, drv, 0.556);
   const rearIdentity = addRearIdentity(body, team, drv);
 
   const brakeGlows = ['brake_glow_l', 'brake_glow_r']
@@ -2090,7 +2090,7 @@ export function buildPrimitiveCarMesh(team, driver) {
   // nose roundel (kept)
   put(DISC(), decalM(`roundel:${drv.num}:${accent.getHexString()}`, roundelTex(drv.num, accent)),
     0, 0.545, 1.42, { s: [0.12, 0.12, 1], r: [-HALF_PI, 0, 0], name: 'roundel' });
-  const liveryDetail = addTacnDeckLivery(body, team, drv, 0.612);
+  const liveryDetail = addApexDeckLivery(body, team, drv, 0.612);
   const rearIdentity = addRearIdentity(body, team, drv);
 
   /* --- race-state hooks ------------------------------------------------- */

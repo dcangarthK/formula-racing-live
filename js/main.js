@@ -664,8 +664,8 @@ class Game {
       case 'menu':
         if (payload === 'pilot') {
           const race = CALENDAR.find(r => r.trackId === 'spa');
-          const driverId = DRIVERS.find(d => d.id === 'hacker' && d.team === 'tacn')?.id
-            || DRIVERS.find(d => d.team === 'tacn')?.id;
+          const driverId = DRIVERS.find(d => d.id === 'castellane' && d.team === 'apexnine')?.id
+            || DRIVERS.find(d => d.team === 'apexnine')?.id;
           if (!race || !driverId) break;
           this.ui.sel.mode = 'weekend';
           this.ui.sel.driverId = driverId;

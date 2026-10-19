@@ -15,7 +15,7 @@ test('semantic event keys survive delayed radio crossover without stealing the n
   });
   await page.goto('/?seed=hud-event-contract-2026');
   await page.getByRole('button', { name: /QUICK RACE/ }).click();
-  await page.locator('.drv[data-d="hacker"]').click();
+  await page.locator('.drv[data-d="castellane"]').click();
   await page.getByRole('button', { name: /CONTINUE/ }).click();
   await page.locator('.track-card[data-t="melbourne"]').click();
   await page.waitForFunction(
