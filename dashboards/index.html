@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Timing — Formula Racing Live</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>FORMULA<em>RACING LIVE</em></h1>
+  <span class="pill" id="source-label">source —</span>
+  <nav>
+    <a href="index.html" aria-current="page">Live</a>
+    <a href="post-race.html" id="post-race-link">Post-race</a>
+  </nav>
+</header>
+
+<div class="status-strip">
+  <div class="stat"><span class="lbl">Session</span><span class="val" id="s-session">—</span></div>
+  <div class="stat"><span class="lbl">Circuit</span><span class="val" id="s-circuit">—</span></div>
+  <div class="stat"><span class="lbl">Lap</span><span class="val" id="s-lap">—</span></div>
+  <div class="stat"><span class="lbl">Race time</span><span class="val" id="s-time">—</span></div>
+  <div class="stat"><span class="lbl">Flag</span><span class="val"><span class="flag green" id="s-flag">GREEN</span></span></div>
+  <div class="stat"><span class="lbl">Track</span><span class="val" id="s-track">DRY</span></div>
+  <div class="stat"><span class="lbl">Latency</span><span class="val" id="s-latency">—</span></div>
+  <div class="stat"><span class="lbl">Records</span><span class="val" id="s-seq">—</span></div>
+</div>
+
+<main class="layout-live">
+  <section class="panel">
+    <h2>Timing tower</h2>
+    <table>
+      <thead>
+        <tr><th>Pos</th><th>Driver</th><th>Team</th><th class="num">Gap</th><th class="num">Int</th>
+            <th class="num">Last</th><th class="num">Best</th><th>Tyre</th><th class="num">Wear</th><th>Status</th></tr>
+      </thead>
+      <tbody id="tower"><tr><td colspan="10" class="empty">Waiting for a session…</td></tr></tbody>
+    </table>
+  </section>
+
+  <div class="stack">
+    <section class="panel">
+      <h2>Player car</h2>
+      <div class="panel-body" id="trace"><p class="empty">No engineering feed yet.</p></div>
+    </section>
+    <section class="panel">
+      <h2>Race control</h2>
+      <div class="panel-body"><ul class="feed" id="feed"><li class="empty">No events yet.</li></ul></div>
+    </section>
+  </div>
+</main>
+
+<script type="module" src="src/live.js"></script>
+</body>
+</html>

@@ -78,6 +78,16 @@ function documentIsActive() {
 }
 
 function configuredTelemetryEndpoint() {
+  // `?telemetry=` lets one build point at any ingest service, which is how a
+  // driver aims the game at their own pipeline without rebuilding it. Only
+  // http(s) is accepted, so the parameter cannot smuggle in another scheme.
+  try {
+    const requested = new URLSearchParams(globalThis.location?.search || '').get('telemetry');
+    if (requested) {
+      const url = new URL(requested, globalThis.location?.href);
+      if (url.protocol === 'https:' || url.protocol === 'http:') return url.origin + url.pathname.replace(/\/$/, '');
+    }
+  } catch { /* an unparseable parameter falls through to the build's own value */ }
   const runtime = globalThis.FORMULA_RACING_LIVE_CONFIG?.telemetryEndpoint;
   if (typeof runtime === 'string' && runtime.trim()) return runtime.trim();
   return document.querySelector('meta[name="formula-racing-telemetry-endpoint"]')?.content?.trim() || '';

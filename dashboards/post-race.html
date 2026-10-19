@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-race Analysis — Formula Racing Live</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>FORMULA<em>RACING LIVE</em></h1>
+  <span class="pill" id="source-label">source —</span>
+  <select id="session-picker" aria-label="Session"></select>
+  <nav>
+    <a href="index.html">Live</a>
+    <a href="post-race.html" aria-current="page">Post-race</a>
+  </nav>
+</header>
+
+<div class="status-strip">
+  <div class="stat"><span class="lbl">Circuit</span><span class="val" id="r-circuit">—</span></div>
+  <div class="stat"><span class="lbl">Session</span><span class="val" id="r-type">—</span></div>
+  <div class="stat"><span class="lbl">Ended</span><span class="val" id="r-status">—</span></div>
+  <div class="stat"><span class="lbl">Laps</span><span class="val" id="r-laps">—</span></div>
+  <div class="stat"><span class="lbl">Best lap</span><span class="val" id="r-best">—</span></div>
+  <div class="stat"><span class="lbl">Average</span><span class="val" id="r-avg">—</span></div>
+  <div class="stat"><span class="lbl">Consistency</span><span class="val" id="r-consistency">—</span></div>
+</div>
+
+<main>
+  <section class="panel">
+    <h2>Classification</h2>
+    <table>
+      <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th class="num">Laps</th><th class="num">Best</th>
+                 <th class="num">Penalty</th><th class="num">Points</th><th>Status</th></tr></thead>
+      <tbody id="classification"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Your lap times</h2>
+    <div class="panel-body"><svg class="chart" id="lap-chart" viewBox="0 0 800 190" preserveAspectRatio="none"></svg></div>
+    <table>
+      <thead><tr><th>Lap</th><th class="num">Time</th><th class="num">S1</th><th class="num">S2</th><th class="num">S3</th><th class="num">Δ to best</th></tr></thead>
+      <tbody id="laps"><tr><td colspan="6" class="empty">No laps recorded.</td></tr></tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Race debrief</h2>
+    <div class="panel-body" id="debrief"><p class="empty">No AI debrief on this session.</p></div>
+  </section>
+
+  <section class="panel">
+    <h2>Event log</h2>
+    <div class="panel-body"><ul class="feed" id="events"><li class="empty">No events.</li></ul></div>
+  </section>
+</main>
+
+<script type="module" src="src/post-race.js"></script>
+</body>
+</html>

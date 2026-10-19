@@ -29,7 +29,12 @@
   from the DPE strategy doc — fixed producer, provided dashboards behind a
   pluggable contract, six candidate architectures, measured cost reference, four
   sprints and the validation order — `docs/challenge/gcp-racing-challenge.md`.
-- [ ] Build the two dashboards and the data contract they read.
+- [x] Built the two dashboards and the contract they read: a live timing screen
+  with glass-to-glass latency, a post-race analysis screen, a pluggable source
+  (HTTP serving contract or adapter module), a reference serving implementation
+  that also accepts the game's uplink, and 15 contract tests.
+- [x] Drove a real 22-car Monza race from the browser into the dashboards:
+  21,014 records, both screens correct, player won on a 1:24.750 best lap.
 - [ ] Deploy the GCP stack, create the signing-secret version, configure the game
   endpoint/origin, and run the live smoke test in the chosen GCP project.
 - [x] Added player-authored teams: name, code, livery colours, driver name,

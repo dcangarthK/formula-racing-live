@@ -54,6 +54,18 @@ The challenge this platform exists to run is scoped in
 services, the game and the two dashboards are fixed, and architecture A (the
 one implemented here) is the baseline we validate first.
 
+The dashboards exist and have been proven against a real race. `dashboards/`
+holds both screens and the contract projection; `tools/contract-server.mjs` is
+a local stand-in for the cloud that accepts the game's uplink and serves the
+contract. End to end locally:
+
+```bash
+node tools/contract-server.mjs                 # :8365 ingest + contract + screens
+npm run build && python3 tools/devserver.py 8366 dist
+open "http://127.0.0.1:8366/?telemetry=http://127.0.0.1:8365"
+open "http://127.0.0.1:8365/"
+```
+
 ## Next slice: authorized deployment
 
 Follow `cloud/README.md` to build the image, bootstrap the Secret Manager

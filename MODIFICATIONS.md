@@ -53,3 +53,14 @@ layer. It will not silently replace the upstream fictional championship.
   the grid — name, entrant name, three-letter code, body and accent colour,
   driver name, abbreviation and car number — leaving team performance and the
   rest of the grid untouched.
+
+## 2026-10-20 — dashboards
+
+- Added the live timing and post-race analysis screens, the `LiveState` and
+  `RaceReport` projections they read, and a pluggable source so a serving
+  layer or a browser-side adapter can feed them.
+- Added a reference serving implementation that accepts the game's telemetry
+  uplink locally, and a `?telemetry=` parameter so one build can be pointed at
+  any ingest service.
+- Added a session roster to `session_started`, so the live tier can keep
+  carrying driver ids alone.

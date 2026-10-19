@@ -177,6 +177,23 @@ export function serializePlayerEngineering(session = {}) {
   };
 }
 
+// Identity that never changes within a session: sent once, with
+// `session_started`, instead of in every live sample.
+export function serializeRoster(session = {}) {
+  const entries = Array.isArray(session.entries) ? session.entries : [];
+  return entries.map(entry => ({
+    driverId: text(entry.driver?.id),
+    code: text(entry.driver?.code),
+    number: optionalFinite(entry.driver?.num),
+    firstName: text(entry.driver?.firstName),
+    lastName: text(entry.driver?.lastName),
+    teamId: text(entry.team?.id || entry.driver?.team),
+    teamName: text(entry.team?.name),
+    isPlayer: !!entry.isPlayer,
+    gridPosition: finite(entry.gridPos),
+  }));
+}
+
 export function serializeRaceSession(session = {}) {
   return {
     mode: text(session.mode, 'race'),
@@ -487,6 +504,14 @@ export class RaceTelemetryRecorder {
       event: 'session_started',
       mode: text(session?.mode, 'race'),
       configuredLaps: finite(session?.laps),
+      circuit: {
+        id: text(session?.circuit?.id || session?.circuit?.key),
+        name: text(session?.circuit?.publicName || session?.circuit?.name || session?.circuit?.def?.name),
+        lengthM: finite(session?.circuit?.length),
+      },
+      // The roster is sent once so the live tier can carry ids alone. Without
+      // it a consumer has names for no car on the grid.
+      roster: serializeRoster(session),
     });
     this._persist([record]);
     return [record];
